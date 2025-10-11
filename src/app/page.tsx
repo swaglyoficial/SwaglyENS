@@ -1,103 +1,133 @@
-import Image from "next/image";
+'use client'
 
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAccount } from "wagmi"
+import Image from "next/image"
+import Link from "next/link"
+import { ArrowUpRight, Sparkles } from "lucide-react"
+
+import { ConnectButton } from "@/components/connect-button"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+
+/**
+ * Página principal de Swagly
+ * Muestra la landing page y maneja la redirección automática cuando el usuario conecta su wallet
+ * - Si el usuario está conectado, verifica si tiene datos en la BD
+ * - Si no tiene datos, redirige a /onboarding
+ * - Si tiene datos completos, redirige a /dashboard
+ */
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const router = useRouter()
+  const { address, isConnected } = useAccount()
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+  /**
+   * Verifica el estado del usuario cuando conecta su wallet
+   * y redirige automáticamente según su estado
+   */
+  useEffect(() => {
+    async function checkUserStatus() {
+      if (!address || !isConnected) return
+
+      try {
+        // Verificar si el usuario existe en la base de datos
+        const response = await fetch(`/api/users/${address}`)
+        const data = await response.json()
+
+        if (response.ok && data.user) {
+          // Usuario existe, verificar si tiene pasaportes
+          if (data.user.passports && data.user.passports.length > 0) {
+            // Tiene pasaportes, redirigir al dashboard
+            router.push('/dashboard')
+          } else {
+            // No tiene pasaportes, redirigir a onboarding
+            router.push('/onboarding')
+          }
+        } else {
+          // Usuario no existe, redirigir a onboarding
+          router.push('/onboarding')
+        }
+      } catch (error) {
+        console.error('Error checking user status:', error)
+        // En caso de error, redirigir a onboarding para que complete el proceso
+        router.push('/onboarding')
+      }
+    }
+
+    if (isConnected && address) {
+      checkUserStatus()
+    }
+  }, [isConnected, address, router])
+
+  return (
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black text-foreground">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="neon-grid absolute inset-0 opacity-20" aria-hidden />
+        <div className="absolute -left-20 top-32 h-64 w-64 rounded-full bg-cyan-400/25 blur-[120px]" aria-hidden />
+        <div className="absolute right-[-12%] top-6 h-72 w-72 rounded-full bg-cyan-500/20 blur-[120px]" aria-hidden />
+        <div className="absolute bottom-[-18%] left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-cyan-500/25 blur-[110px]" aria-hidden />
+      </div>
+
+      <div className="relative z-10 flex w-full max-w-3xl flex-col items-center gap-12 px-6 py-20 text-center sm:px-12">
+        <header className="flex flex-col items-center gap-4">
+          <div className="relative grid h-20 w-20 place-items-center rounded-2xl border border-cyan-500/60 bg-white/5 shadow-[0_0_35px_rgba(0,240,255,0.25)] backdrop-blur">
             <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+              src="/reown.svg"
+              alt="Swagly logo"
+              width={72}
+              height={72}
+              priority
+              className="h-14 w-14 opacity-90"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+          </div>
+          <Badge variant="secondary" className="border border-cyan-500/60 bg-cyan-500/10 text-cyan-100">
+            Swagly
+          </Badge>
+        </header>
+
+        <section className="flex flex-col items-center gap-8" id="experiencia">
+          <Badge className="inline-flex items-center gap-2 border border-cyan-500/40 bg-cyan-500/10 text-cyan-100">
+            <Sparkles className="h-3.5 w-3.5" />
+            Beta privada
+          </Badge>
+
+          <div className="space-y-5">
+            <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">
+              Tu pasaporte Web3 para coleccionar cada logro
+            </h1>
+            <div className="space-y-4 text-cyan-200/80 sm:text-lg">
+              <p>
+                Colecciona tu experiencia hackathon y presume tu recorrido on-chain con un perfil verificable.
+              </p>
+              <p>
+                Escanea stickers NFC, participa en workshops, acumula POAPs y deja que cada actividad sume dentro de tu identidad Swagly.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <ConnectButton />
+            <Button
+              asChild
+              variant="outline"
+              className="border-cyan-500/60 text-cyan-100 hover:bg-cyan-500/10"
+            >
+              <Link href="#experiencia">
+                Descubre la experiencia
+                <ArrowUpRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+
+          <ul className="space-y-3 text-sm text-muted-foreground sm:text-base">
+            <li>- Dashboard unificado para asistentes y organizadores.</li>
+            <li>- Recompensas en tokens y metricas de engagement en tiempo real.</li>
+            <li>- Integracion plug-and-play con tu stack Web3 favorito.</li>
+          </ul>
+        </section>
+      </div>
+    </main>
+  )
 }
+
