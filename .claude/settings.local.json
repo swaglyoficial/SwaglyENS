@@ -7,7 +7,8 @@
       "Bash(timeout:*)",
       "Bash(npx prisma db push:*)",
       "Bash(git checkout:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
