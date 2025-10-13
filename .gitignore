@@ -30,8 +30,24 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# ============================================
+# ARCHIVOS DE VARIABLES DE ENTORNO (CRÍTICO)
+# ============================================
+# NUNCA commitear estos archivos - contienen secrets y claves privadas
+.env
+.env.local
+.env.development
+.env.production
+.env*.local
+.env*.backup
+
+# Archivos de configuración sensibles
+*.pem
+*.key
+*.p12
+*.pfx
+secrets.json
+config.local.json
 
 # vercel
 .vercel

@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ConnectButton } from '@/components/connect-button'
 import { AddPassportDialog } from '@/components/add-passport-dialog'
+import { ScanMerchDialog } from '@/components/scan-merch-dialog'
 import { Loader2, Ticket, CheckCircle2, Clock, Scan, Calendar } from 'lucide-react'
 
 /**
@@ -279,14 +280,17 @@ export default function DashboardPage() {
 
             <Separator className="bg-cyan-500/20" />
 
-            {/* Scan Merch Button */}
-            <Button
-              className="w-full border border-cyan-500/60 bg-cyan-500/20 text-cyan-100 hover:bg-cyan-500/30"
-              size="lg"
-            >
-              <Scan className="mr-2 h-5 w-5" />
-              Escanear Merch
-            </Button>
+            {/* Scan Merch Dialog */}
+            {user && address && (
+              <ScanMerchDialog
+                userId={user.id}
+                walletAddress={address}
+                eventId={currentPassport.event.id}
+                onScanSuccess={() => {
+                  fetchUserData()
+                }}
+              />
+            )}
 
             <Separator className="bg-cyan-500/20" />
 

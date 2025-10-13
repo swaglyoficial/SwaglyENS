@@ -3,7 +3,7 @@
 import { wagmiAdapter, projectId } from '@/../config'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createAppKit } from '@reown/appkit/react'
-import { mainnet, arbitrum, scroll, base, polygon } from '@reown/appkit/networks'
+import { mainnet, arbitrum, scroll, base, polygon, scrollSepolia } from '@reown/appkit/networks'
 import React, { type ReactNode, useRef } from 'react'
 import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi'
 
@@ -22,17 +22,25 @@ const metadata = {
   icons: ['https://avatars.githubusercontent.com/u/179229932']
 }
 
+const tokens = {
+  'eip155:534351': {
+    address: '0x05668BC3Fb05c2894988142a0b730149122192eB',
+  }
+}//configuración de token de SWAG en Reown
+
+
 const appKitConfig = {
   adapters: [wagmiAdapter],
   projectId,
-  networks: [mainnet, arbitrum, scroll, base, polygon],
-  defaultNetwork: mainnet,
+  networks: [mainnet, arbitrum, scroll, base, polygon, scrollSepolia],
+  defaultNetwork: scrollSepolia, // Cambiar a Scroll Sepolia para desarrollo
+  tokens,//llamar a traer el token de SWAG
   metadata,
   features: {
     analytics: true,
     email: true,
     socials: ['google', 'apple', 'x', 'github', 'farcaster'],
-    emailShowWallets: true
+    emailShowWallets: true,
   },
   themeMode: 'dark'
 }

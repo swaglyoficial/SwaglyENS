@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Crear la actividad
     const activity = await prisma.activity.create({
       data: {
         eventId,
@@ -100,7 +101,36 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({ activity }, { status: 201 })
+    // ========================================
+    // SINCRONIZAR CON PASAPORTES EXISTENTES
+    // ========================================
+    // Buscar todos los pasaportes que ya existen para este evento
+    const existingPassports = await prisma.passport.findMany({
+      where: { eventId },
+      select: { id: true },
+    })
+
+    // Si hay pasaportes existentes, agregar esta nueva actividad a cada uno
+    if (existingPassports.length > 0) {
+      console.log(`📋 Sincronizando nueva actividad "${name}" con ${existingPassports.length} pasaporte(s) existente(s)`)
+
+      // Crear PassportActivity para cada pasaporte existente
+      await prisma.passportActivity.createMany({
+        data: existingPassports.map((passport) => ({
+          passportId: passport.id,
+          activityId: activity.id,
+          status: 'pending',
+        })),
+        skipDuplicates: true, // Evitar errores si ya existe
+      })
+
+      console.log(`✅ Actividad agregada a ${existingPassports.length} pasaporte(s)`)
+    }
+
+    return NextResponse.json({
+      activity,
+      passportsSynced: existingPassports.length, // Informar cuántos pasaportes se actualizaron
+    }, { status: 201 })
   } catch (error) {
     console.error('Error creating activity:', error)
     return NextResponse.json(
