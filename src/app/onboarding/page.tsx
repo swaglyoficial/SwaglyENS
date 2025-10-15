@@ -160,34 +160,34 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black text-foreground p-4">
-      {/* Background effects */}
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black text-foreground p-4 sm:p-6">
+      {/* Background effects - optimizados para móviles */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="neon-grid absolute inset-0 opacity-20" aria-hidden />
-        <div className="absolute -left-20 top-32 h-64 w-64 rounded-full bg-cyan-400/25 blur-[120px]" aria-hidden />
-        <div className="absolute right-[-12%] top-6 h-72 w-72 rounded-full bg-cyan-500/20 blur-[120px]" aria-hidden />
+        <div className="neon-grid absolute inset-0 opacity-10 sm:opacity-20" aria-hidden />
+        <div className="absolute -left-10 top-20 h-48 w-48 rounded-full bg-cyan-400/20 blur-[100px] sm:-left-20 sm:top-32 sm:h-64 sm:w-64 sm:blur-[120px]" aria-hidden />
+        <div className="absolute -right-10 top-10 h-56 w-56 rounded-full bg-cyan-500/15 blur-[100px] sm:right-[-12%] sm:top-6 sm:h-72 sm:w-72 sm:blur-[120px]" aria-hidden />
       </div>
 
-      {/* Form Card */}
+      {/* Form Card - responsive */}
       <Card className="relative z-10 w-full max-w-md border-cyan-500/20 bg-black/40 backdrop-blur-xl">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <Badge className="inline-flex items-center gap-2 border border-cyan-500/40 bg-cyan-500/10 text-cyan-100">
-              <Sparkles className="h-3.5 w-3.5" />
+        <CardHeader className="p-4 text-center sm:p-6">
+          <div className="mb-3 flex justify-center sm:mb-4">
+            <Badge className="inline-flex items-center gap-1.5 border border-cyan-500/40 bg-cyan-500/10 text-cyan-100 text-xs sm:gap-2 sm:text-sm">
+              <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               Bienvenido a Swagly
             </Badge>
           </div>
-          <CardTitle className="text-2xl text-white">Completa tu perfil</CardTitle>
-          <CardDescription className="text-cyan-200/70">
+          <CardTitle className="text-xl text-white sm:text-2xl">Completa tu perfil</CardTitle>
+          <CardDescription className="text-sm text-cyan-200/70 sm:text-base">
             Ingresa tu apodo y selecciona el evento al que asistes
           </CardDescription>
         </CardHeader>
 
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <CardContent className="p-4 sm:p-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {/* Nickname Input */}
             <div className="space-y-2">
-              <Label htmlFor="nickname" className="text-cyan-100">
+              <Label htmlFor="nickname" className="text-sm text-cyan-100 sm:text-base">
                 Apodo
               </Label>
               <Input
@@ -196,14 +196,14 @@ export default function OnboardingPage() {
                 placeholder="Tu apodo único"
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
-                className="border-cyan-500/30 bg-black/50 text-white placeholder:text-cyan-200/40 focus:border-cyan-500/60"
+                className="border-cyan-500/30 bg-black/50 text-white placeholder:text-cyan-200/40 focus:border-cyan-500/60 text-sm sm:text-base"
                 disabled={isLoading}
               />
             </div>
 
             {/* Event Select */}
             <div className="space-y-2">
-              <Label htmlFor="event" className="text-cyan-100">
+              <Label htmlFor="event" className="text-sm text-cyan-100 sm:text-base">
                 Evento
               </Label>
               <Select
@@ -211,7 +211,7 @@ export default function OnboardingPage() {
                 onValueChange={setSelectedEventId}
                 disabled={isLoading}
               >
-                <SelectTrigger className="border-cyan-500/30 bg-black/50 text-white focus:border-cyan-500/60">
+                <SelectTrigger className="border-cyan-500/30 bg-black/50 text-white focus:border-cyan-500/60 text-sm sm:text-base">
                   <SelectValue placeholder="Selecciona un evento" />
                 </SelectTrigger>
                 <SelectContent className="border-cyan-500/20 bg-black/95 text-white backdrop-blur-xl">
@@ -219,7 +219,7 @@ export default function OnboardingPage() {
                     <SelectItem
                       key={event.id}
                       value={event.id}
-                      className="focus:bg-cyan-500/20 focus:text-cyan-100"
+                      className="focus:bg-cyan-500/20 focus:text-cyan-100 text-sm sm:text-base"
                     >
                       {event.name}
                     </SelectItem>
@@ -230,7 +230,7 @@ export default function OnboardingPage() {
 
             {/* Error Message */}
             {error && (
-              <div className="rounded-lg border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-200">
+              <div className="rounded-lg border border-red-500/50 bg-red-500/10 p-3 text-xs text-red-200 sm:text-sm">
                 {error}
               </div>
             )}
@@ -238,7 +238,8 @@ export default function OnboardingPage() {
             {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full border border-cyan-500/60 bg-cyan-500/20 text-cyan-100 hover:bg-cyan-500/30"
+              size="lg"
+              className="w-full border border-cyan-500/60 bg-cyan-500/20 text-cyan-100 hover:bg-cyan-500/30 text-sm sm:text-base"
               disabled={isLoading}
             >
               {isLoading ? (

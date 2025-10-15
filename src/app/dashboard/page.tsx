@@ -185,34 +185,36 @@ export default function DashboardPage() {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-black text-foreground">
-      {/* Background effects */}
+      {/* Background effects - optimizados para móviles */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="neon-grid absolute inset-0 opacity-20" aria-hidden />
-        <div className="absolute -left-20 top-32 h-64 w-64 rounded-full bg-cyan-400/25 blur-[120px]" aria-hidden />
-        <div className="absolute right-[-12%] top-20 h-72 w-72 rounded-full bg-cyan-500/20 blur-[120px]" aria-hidden />
+        <div className="neon-grid absolute inset-0 opacity-10 sm:opacity-20" aria-hidden />
+        <div className="absolute -left-10 top-20 h-48 w-48 rounded-full bg-cyan-400/20 blur-[100px] sm:-left-20 sm:top-32 sm:h-64 sm:w-64 sm:blur-[120px]" aria-hidden />
+        <div className="absolute -right-10 top-10 h-56 w-56 rounded-full bg-cyan-500/15 blur-[100px] sm:right-[-12%] sm:top-20 sm:h-72 sm:w-72 sm:blur-[120px]" aria-hidden />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 mx-auto max-w-4xl p-4 py-8 sm:p-6 lg:p-8">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <Badge className="mb-4 border border-cyan-500/40 bg-cyan-500/10 text-cyan-100">
-            <Ticket className="mr-1.5 h-3.5 w-3.5" />
+      {/* Content - con padding responsive */}
+      <div className="relative z-10 mx-auto max-w-5xl px-4 py-6 sm:p-6 lg:p-8">
+        {/* Header - más compacto en móviles */}
+        <div className="mb-6 text-center sm:mb-8">
+          <Badge className="mb-3 border border-cyan-500/40 bg-cyan-500/10 text-cyan-100 text-xs sm:mb-4 sm:text-sm">
+            <Ticket className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
             Tu Pasaporte Digital
           </Badge>
-          <h1 className="mb-4 text-3xl font-bold text-white sm:text-4xl">
+          <h1 className="mb-3 text-2xl font-bold text-white sm:mb-4 sm:text-3xl lg:text-4xl">
             ¡Hola, {user?.nickname}!
           </h1>
-          <div className="flex justify-center">
-            <ConnectButton />
+          <div className="flex items-center justify-center">
+            <div className="w-full max-w-xs sm:w-auto">
+              <ConnectButton />
+            </div>
           </div>
         </div>
 
-        {/* Pasaportes y botón agregar */}
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-cyan-200/70">
-              <Calendar className="mr-1 inline h-4 w-4" />
+        {/* Pasaportes y botón agregar - mejorado para móviles */}
+        <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+            <span className="w-full text-center text-xs text-cyan-200/70 sm:w-auto sm:text-left sm:text-sm">
+              <Calendar className="mr-1 inline h-3 w-3 sm:h-4 sm:w-4" />
               Tus Pasaportes:
             </span>
             {user?.passports.map((passport, index) => (
@@ -223,8 +225,8 @@ export default function DashboardPage() {
                 onClick={() => setCurrentPassportIndex(index)}
                 className={
                   index === currentPassportIndex
-                    ? "border border-cyan-500/60 bg-cyan-500/30 text-cyan-100 hover:bg-cyan-500/40"
-                    : "border-cyan-500/30 text-cyan-200 hover:bg-cyan-500/10"
+                    ? "border border-cyan-500/60 bg-cyan-500/30 text-cyan-100 hover:bg-cyan-500/40 text-xs sm:text-sm"
+                    : "border-cyan-500/30 text-cyan-200 hover:bg-cyan-500/10 text-xs sm:text-sm"
                 }
               >
                 {passport.event.name}
@@ -232,42 +234,44 @@ export default function DashboardPage() {
             ))}
           </div>
           {user && (
-            <AddPassportDialog
-              userId={user.id}
-              existingEventIds={user.passports.map(p => p.event.id)}
-              onPassportAdded={() => {
-                fetchUserData()
-              }}
-            />
+            <div className="flex justify-center sm:justify-end">
+              <AddPassportDialog
+                userId={user.id}
+                existingEventIds={user.passports.map(p => p.event.id)}
+                onPassportAdded={() => {
+                  fetchUserData()
+                }}
+              />
+            </div>
           )}
         </div>
 
-        {/* Passport Card */}
-        <Card className="mb-6 border-cyan-500/20 bg-black/40 backdrop-blur-xl">
-          <CardHeader>
-            <div className="flex items-start justify-between">
+        {/* Passport Card - optimizado para móviles */}
+        <Card className="mb-4 border-cyan-500/20 bg-black/40 backdrop-blur-xl sm:mb-6">
+          <CardHeader className="p-4 sm:p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
               <div className="flex-1">
-                <CardTitle className="text-2xl text-white">
+                <CardTitle className="text-xl text-white sm:text-2xl">
                   {currentPassport.event.name}
                 </CardTitle>
-                <CardDescription className="mt-2 text-cyan-200/70">
+                <CardDescription className="mt-2 text-sm text-cyan-200/70 sm:text-base">
                   {currentPassport.event.description}
                 </CardDescription>
               </div>
               <Badge
                 variant={progress === 100 ? "default" : "secondary"}
-                className={progress === 100 ? "bg-green-500/20 text-green-200 border-green-500/40" : "border-cyan-500/40 bg-cyan-500/10 text-cyan-100"}
+                className={`${progress === 100 ? "bg-green-500/20 text-green-200 border-green-500/40" : "border-cyan-500/40 bg-cyan-500/10 text-cyan-100"} text-xs sm:text-sm shrink-0`}
               >
                 {progress}% Completado
               </Badge>
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 p-4 sm:space-y-6 sm:p-6">
             {/* Progress Bar */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-cyan-100">Progreso del evento</span>
+              <div className="flex flex-col gap-1 text-xs sm:flex-row sm:items-center sm:justify-between sm:text-sm">
+                <span className="font-medium text-cyan-100">Progreso del evento</span>
                 <span className="text-cyan-200/70">
                   {completed.length} de {currentPassport.activities.length} actividades
                 </span>
@@ -294,38 +298,38 @@ export default function DashboardPage() {
 
             <Separator className="bg-cyan-500/20" />
 
-            {/* Activities Section */}
+            {/* Activities Section - responsive heights */}
             <div className="space-y-4">
               {/* Pending Activities */}
               {pending.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
-                    <Clock className="h-5 w-5 text-cyan-400" />
+                  <h3 className="flex items-center gap-2 text-base font-semibold text-white sm:text-lg">
+                    <Clock className="h-4 w-4 text-cyan-400 sm:h-5 sm:w-5" />
                     Actividades Pendientes
                   </h3>
-                  <ScrollArea className="h-[200px] rounded-lg border border-cyan-500/20 bg-black/30 p-3">
+                  <ScrollArea className="h-[180px] rounded-lg border border-cyan-500/20 bg-black/30 p-2 sm:h-[200px] sm:p-3">
                     <div className="space-y-2">
                       {pending.map((pa) => (
                         <div
                           key={pa.activityId}
-                          className="rounded-lg border border-cyan-500/20 bg-black/40 p-3 transition-colors hover:bg-cyan-500/10"
+                          className="rounded-lg border border-cyan-500/20 bg-black/40 p-2.5 transition-colors hover:bg-cyan-500/10 sm:p-3"
                         >
-                          <div className="flex items-start justify-between gap-2">
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                             <div className="flex-1">
-                              <p className="font-medium text-white">{pa.activity.name}</p>
-                              <p className="mt-1 text-sm text-cyan-200/60">
+                              <p className="text-sm font-medium text-white sm:text-base">{pa.activity.name}</p>
+                              <p className="mt-1 text-xs text-cyan-200/60 sm:text-sm">
                                 {pa.activity.description}
                               </p>
                               {pa.activity.sponsor && (
                                 <Badge
                                   variant="outline"
-                                  className="mt-2 border-cyan-500/30 text-cyan-300"
+                                  className="mt-2 border-cyan-500/30 text-cyan-300 text-xs"
                                 >
                                   {pa.activity.sponsor.name}
                                 </Badge>
                               )}
                             </div>
-                            <Badge className="border-yellow-500/40 bg-yellow-500/10 text-yellow-200">
+                            <Badge className="border-yellow-500/40 bg-yellow-500/10 text-yellow-200 text-xs shrink-0 self-start sm:self-auto">
                               {pa.activity.numOfTokens} tokens
                             </Badge>
                           </div>
@@ -339,33 +343,33 @@ export default function DashboardPage() {
               {/* Completed Activities */}
               {completed.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
-                    <CheckCircle2 className="h-5 w-5 text-green-400" />
+                  <h3 className="flex items-center gap-2 text-base font-semibold text-white sm:text-lg">
+                    <CheckCircle2 className="h-4 w-4 text-green-400 sm:h-5 sm:w-5" />
                     Actividades Completadas
                   </h3>
-                  <ScrollArea className="h-[200px] rounded-lg border border-green-500/20 bg-black/30 p-3">
+                  <ScrollArea className="h-[180px] rounded-lg border border-green-500/20 bg-black/30 p-2 sm:h-[200px] sm:p-3">
                     <div className="space-y-2">
                       {completed.map((pa) => (
                         <div
                           key={pa.activityId}
-                          className="rounded-lg border border-green-500/20 bg-black/40 p-3 opacity-75"
+                          className="rounded-lg border border-green-500/20 bg-black/40 p-2.5 opacity-75 sm:p-3"
                         >
-                          <div className="flex items-start justify-between gap-2">
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                             <div className="flex-1">
-                              <p className="font-medium text-white">{pa.activity.name}</p>
-                              <p className="mt-1 text-sm text-green-200/60">
+                              <p className="text-sm font-medium text-white sm:text-base">{pa.activity.name}</p>
+                              <p className="mt-1 text-xs text-green-200/60 sm:text-sm">
                                 {pa.activity.description}
                               </p>
                               {pa.activity.sponsor && (
                                 <Badge
                                   variant="outline"
-                                  className="mt-2 border-green-500/30 text-green-300"
+                                  className="mt-2 border-green-500/30 text-green-300 text-xs"
                                 >
                                   {pa.activity.sponsor.name}
                                 </Badge>
                               )}
                             </div>
-                            <Badge className="border-green-500/40 bg-green-500/10 text-green-200">
+                            <Badge className="border-green-500/40 bg-green-500/10 text-green-200 text-xs shrink-0 self-start sm:self-auto">
                               ✓ {pa.activity.numOfTokens} tokens
                             </Badge>
                           </div>

@@ -8,10 +8,10 @@ import { prisma } from '@/lib/prisma'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { walletAddress: string } }
+  context: { params: Promise<{ walletAddress: string }> }
 ) {
   try {
-    const { walletAddress } = params
+    const { walletAddress } = await context.params
 
     // Buscar usuario por wallet address
     const user = await prisma.user.findUnique({
@@ -50,3 +50,4 @@ export async function GET(
     )
   }
 }
+

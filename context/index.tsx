@@ -1,4 +1,21 @@
-﻿'use client'
+/**
+ * ============================================
+ * CONTEXT PROVIDER - CONFIGURACIÓN DE REOWN APPKIT
+ * ============================================
+ *
+ * Este archivo crea el provider de contexto para:
+ * - Reown AppKit (conexión de wallets)
+ * - Wagmi (interacción con blockchain)
+ * - TanStack Query (cacheo de datos)
+ *
+ * Funcionalidades:
+ * - Conectar wallets (MetaMask, WalletConnect, etc.)
+ * - Cambiar entre diferentes redes blockchain
+ * - Gestionar estado de conexión
+ * - Mostrar tokens personalizados (como SWAG)
+ */
+
+'use client'
 
 import { wagmiAdapter, projectId } from '@/../config'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -7,55 +24,169 @@ import { mainnet, arbitrum, scroll, base, polygon, scrollSepolia } from '@reown/
 import React, { type ReactNode, useRef } from 'react'
 import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi'
 
-// Set up queryClient
+// ============================================
+// CONFIGURACIÓN DE TANSTACK QUERY
+// ============================================
+/**
+ * QueryClient maneja el cacheo y sincronización de datos
+ * Se usa para optimizar las llamadas a la blockchain y APIs
+ */
 const queryClient = new QueryClient()
 
+// Validar que el Project ID esté configurado
 if (!projectId) {
   throw new Error('Project ID is not defined')
 }
 
-// Set up metadata
+// ============================================
+// METADATA DE LA APLICACIÓN
+// ============================================
+/**
+ * Información que se muestra en wallets cuando el usuario conecta
+ */
 const metadata = {
-  name: 'Swagly',
-  description: 'Swagly',
-  url: 'https://www.swagly.xyz/',
-  icons: ['https://avatars.githubusercontent.com/u/179229932']
+  name: 'Swagly',                                              // Nombre de la app
+  description: 'Swagly',                                       // Descripción de la app
+  url: 'https://www.swagly.xyz/',                             // URL de la app
+  icons: ['https://avatars.githubusercontent.com/u/179229932'] // Logo de la app
 }
 
+// ============================================
+// CONFIGURACIÓN DE TOKENS PERSONALIZADOS
+// ============================================
+/**
+ * Tokens ERC-20 personalizados que se mostrarán en Reown
+ *
+ * Formato:
+ * 'eip155:CHAIN_ID': { address: 'CONTRACT_ADDRESS' }
+ *
+ * NOTA: Solo funciona con tokens ERC-20, no con ERC-1155
+ */
 const tokens = {
+  // Token SWAG en Scroll Sepolia (Chain ID: 534351)
   'eip155:534351': {
     address: '0x05668BC3Fb05c2894988142a0b730149122192eB',
   }
-}//configuración de token de SWAG en Reown
+}
 
-
+// ============================================
+// CONFIGURACIÓN DE REOWN APPKIT
+// ============================================
+/**
+ * Configuración principal de Reown AppKit
+ *
+ * AppKit es la UI para conectar wallets y gestionar conexiones
+ * Soporta múltiples wallets: MetaMask, WalletConnect, Coinbase, etc.
+ */
 const appKitConfig = {
+  // Adaptadores de conexión (Wagmi para EVM chains)
   adapters: [wagmiAdapter],
+
+  // Project ID de Reown (obtenido de https://dashboard.reown.com)
   projectId,
-  networks: [mainnet, arbitrum, scroll, base, polygon, scrollSepolia],
-  defaultNetwork: scrollSepolia, // Cambiar a Scroll Sepolia para desarrollo
-  tokens,//llamar a traer el token de SWAG
+
+  // ============================================
+  // REDES BLOCKCHAIN SOPORTADAS
+  // ============================================
+  /**
+   * Lista de todas las redes que el usuario puede seleccionar
+   *
+   * Mainnets (Producción):
+   * - mainnet: Ethereum Mainnet
+   * - arbitrum: Arbitrum One (Layer 2 de Ethereum)
+   * - scroll: Scroll (Layer 2 de Ethereum)
+   * - base: Base (Layer 2 de Coinbase)
+   * - polygon: Polygon (sidechain de Ethereum)
+   *
+   * Testnets (Desarrollo):
+   * - scrollSepolia: Scroll Sepolia Testnet (red principal para Swagly)
+   */
+  networks: [
+    mainnet,              // Ethereum Mainnet
+    arbitrum,             // Arbitrum One (Layer 2)
+    scroll,               // Scroll (Layer 2)
+    base,                 // Base (Layer 2)
+    polygon,              // Polygon
+    scrollSepolia,        // Scroll Sepolia Testnet ✅ Red principal de desarrollo
+  ],
+
+  // ============================================
+  // RED POR DEFECTO
+  // ============================================
+  /**
+   * Red que se selecciona automáticamente al abrir la app
+   * Scroll Sepolia es la red principal para desarrollo de Swagly
+   */
+  defaultNetwork: scrollSepolia,
+
+  // Tokens personalizados a mostrar (token SWAG en Scroll Sepolia)
+  tokens,
+
+  // Metadata de la app (nombre, descripción, logo)
   metadata,
-  features: {
-    analytics: true,
-    email: true,
+
+  // ============================================
+  // FUNCIONALIDADES DE APPKIT
+  // ============================================
+  /**
+   * Features habilitadas en Reown AppKit
+   *
+   * - analytics: Recopila estadísticas de uso (Reown Dashboard)
+   * - email: Permite login con email usando Reown Auth
+   * - socials: Métodos de login social (Google, Apple, X, GitHub, Farcaster)
+   * - emailShowWallets: Muestra opciones de wallets cuando se usa email
+   */
+  /*features: {
+    analytics: true,      // Habilitar analytics de Reown
+    email: true,          // Permitir login con email (Reown Auth)
+    // Opciones de login social disponibles
     socials: ['google', 'apple', 'x', 'github', 'farcaster'],
-    emailShowWallets: true,
-  },
+    emailShowWallets: true, // Mostrar wallets cuando se usa email
+  },*/ //Esta configuración se esta jalando desde el panel de reown por eso se retiró
+
+  // ============================================
+  // TEMA VISUAL
+  // ============================================
+  /**
+   * Modo de tema para la interfaz de AppKit
+   * Opciones: 'light' | 'dark' | 'auto'
+   */
   themeMode: 'dark'
 }
 
+// ============================================
+// CONTEXT PROVIDER COMPONENT
+// ============================================
+/**
+ * Componente que envuelve toda la aplicación
+ *
+ * Proporciona:
+ * - Conexión a wallets (via Reown AppKit)
+ * - Estado de Wagmi (para interactuar con contratos)
+ * - Query client (para cacheo de datos)
+ *
+ * @param children - Componentes hijos de la app
+ * @param cookies - Cookies del servidor para SSR (Server-Side Rendering)
+ */
 function ContextProvider({ children, cookies }: { children: ReactNode; cookies: string | null }) {
+  // Referencia para mantener una única instancia de AppKit
   const appKitRef = useRef<ReturnType<typeof createAppKit> | null>(null)
+
+  // Crear AppKit solo una vez (evita recrearlo en cada render)
   if (!appKitRef.current) {
     appKitRef.current = createAppKit(appKitConfig)
   }
 
+  // Inicializar estado de Wagmi desde cookies (para SSR)
   const initialState = cookieToInitialState(wagmiAdapter.wagmiConfig as Config, cookies)
 
   return (
+    // Provider de Wagmi: Maneja conexiones a blockchain y estado de wallets
     <WagmiProvider config={wagmiAdapter.wagmiConfig as Config} initialState={initialState}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      {/* Provider de TanStack Query: Maneja cacheo y sincronización de datos */}
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
     </WagmiProvider>
   )
 }

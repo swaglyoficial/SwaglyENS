@@ -81,6 +81,23 @@
 body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   margin: 0;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mejorar scrolling en móviles */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevenir zoom en inputs en iOS */
+@supports (-webkit-touch-callout: none) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 a {
@@ -94,12 +111,28 @@ code {
 .neon-grid {
   background-image: linear-gradient(rgba(0, 240, 255, 0.12) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 240, 255, 0.12) 1px, transparent 1px);
-  background-size: 120px 120px;
-  mask-image: radial-gradient(circle, rgba(255, 255, 255, 0.9), transparent 70%);
+  background-size: 80px 80px;
+  mask-image: radial-gradient(circle, rgba(255, 255, 255, 0.8), transparent 70%);
+}
+
+@media (min-width: 640px) {
+  .neon-grid {
+    background-size: 120px 120px;
+    mask-image: radial-gradient(circle, rgba(255, 255, 255, 0.9), transparent 70%);
+  }
 }
 
 .appkit-connect appkit-button {
-  display: inline-flex;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .appkit-connect appkit-button {
+    width: auto;
+  }
 }
 
 appkit-button::part(button) {
@@ -111,14 +144,46 @@ appkit-button::part(button) {
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  font-size: 14px;
+  padding: 12px 24px;
+  width: 100%;
+  min-height: 44px;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  appkit-button::part(button) {
+    font-size: 16px;
+    padding: 14px 32px;
+    width: auto;
+  }
 }
 
 appkit-button::part(button):hover {
   box-shadow: 0 0 35px rgba(0, 240, 255, 0.55);
+  transform: translateY(-1px);
+}
+
+appkit-button::part(button):active {
+  transform: translateY(0);
 }
 
 .appkit-connect {
   position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (min-width: 640px) {
+  .appkit-connect {
+    width: auto;
+  }
 }
 
 .appkit-connect::after {
@@ -135,28 +200,52 @@ appkit-button::part(button):hover {
 .info-card {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(0, 240, 255, 0.2);
-  border-radius: 1.25rem;
-  padding: 1.25rem;
+  border-radius: 1rem;
+  padding: 0.875rem;
   backdrop-filter: blur(8px);
 }
 
+@media (min-width: 640px) {
+  .info-card {
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+  }
+}
+
 .info-card-title {
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.9);
 }
 
+@media (min-width: 640px) {
+  .info-card-title {
+    font-size: 0.95rem;
+  }
+}
+
 .info-card-body {
   background: rgba(0, 0, 0, 0.45);
-  border-radius: 1rem;
+  border-radius: 0.75rem;
   color: rgba(226, 232, 240, 0.95);
   font-family: var(--font-geist-mono), 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  margin-top: 0.625rem;
   overflow-x: auto;
-  padding: 0.9rem 1rem;
+  padding: 0.75rem 0.875rem;
   white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (min-width: 640px) {
+  .info-card-body {
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    margin-top: 0.75rem;
+    padding: 0.9rem 1rem;
+  }
 }
 
 .neon-action-button {
