@@ -9,7 +9,7 @@
 
 import { cookieStorage, createStorage, http } from '@wagmi/core'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-import { mainnet, arbitrum, scroll, base, polygon, scrollSepolia } from '@reown/appkit/networks'
+import { mainnet, arbitrum, scroll, base, polygon, scrollSepolia, solanaTestnet } from '@reown/appkit/networks'
 
 // ============================================
 // PROJECT ID DE REOWN
@@ -45,6 +45,7 @@ export const networks = [
   base,                 // Base
   polygon,              // Polygon
   scrollSepolia,        // Scroll Sepolia Testnet (red principal de desarrollo)
+  solanaTestnet
 ]
 
 //Set up the Wagmi Adapter (Config)

@@ -1,20 +1,18 @@
 ﻿'use client'
 
-import { type CSSProperties } from 'react'
+import type { CSSProperties } from 'react'
 
-const neonButtonStyle = {
+const neonButtonVars = {
   '--w3m-accent': '#00F0FF',
   '--w3m-color-accent': '#00F0FF',
   '--w3m-color-inverse': '#000000',
   '--w3m-background': '#021f2a',
   '--w3m-font-size-master': '15px',
-  '--w3m-button-border-radius': '9999px'
-} as CSSProperties
+  '--w3m-button-border-radius': '9999px',
+} satisfies Record<string, string>
 
-export const ConnectButton = () => {
-  return (
-    <div className="appkit-connect">
-      <appkit-button style={neonButtonStyle} />
-    </div>
-  )
-}
+export const ConnectButton = () => (
+  <div className="appkit-connect" style={neonButtonVars as CSSProperties}>
+    <appkit-button />
+  </div>
+)

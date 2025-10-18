@@ -1,19 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 /**
  * GET /api/analytics?eventId=xxx
  *
- * Endpoint principal de analíticas para el panel de administración
+ * Endpoint principal de analÃ­ticas para el panel de administraciÃ³n
  *
- * Retorna métricas completas del evento:
+ * Retorna mÃ©tricas completas del evento:
  * - Usuarios registrados (con pasaportes en el evento)
  * - Actividades completadas vs pendientes
- * - Ranking de actividades más populares
+ * - Ranking de actividades mÃ¡s populares
  * - Volumen total de tokens emitidos por el evento
  * - Engagement por sponsor (interacciones, escaneos)
  * - Estado de NFCs (disponibles, escaneados)
- * - Tasa de retención de usuarios
+ * - Tasa de retenciÃ³n de usuarios
  */
 export async function GET(request: NextRequest) {
   try {
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    // 5. Ranking de actividades más populares (más completadas)
+    // 5. Ranking de actividades mÃ¡s populares (mÃ¡s completadas)
     const activityRanking = await prisma.activity.findMany({
       where: { eventId },
       include: {
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     const formattedActivityRanking = activityRanking.map((activity) => ({
       id: activity.id,
       name: activity.name,
-      sponsor: activity.sponsor.name,
+      sponsor: activity.sponsor?.name ?? 'Sin sponsor',
       completions: activity.activities.length,
       tokensPerCompletion: activity.numOfTokens,
       totalTokensIssued: activity.activities.length * activity.numOfTokens,
@@ -162,7 +162,7 @@ export async function GET(request: NextRequest) {
       total: nfcStats.reduce((sum, s) => sum + s._count, 0),
     }
 
-    // 9. Tasa de retención (usuarios que completaron más de X% de actividades)
+    // 9. Tasa de retenciÃ³n (usuarios que completaron mÃ¡s de X% de actividades)
     const passports = await prisma.passport.findMany({
       where: { eventId },
       select: {
@@ -170,7 +170,7 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    // Usuarios que completaron más del 50% de actividades
+    // Usuarios que completaron mÃ¡s del 50% de actividades
     const highEngagementUsers = passports.filter(
       (p) => p.progress >= 50
     ).length
@@ -187,7 +187,7 @@ export async function GET(request: NextRequest) {
         ? passports.reduce((sum, p) => sum + p.progress, 0) / totalUsers
         : 0
 
-    // Respuesta con todas las métricas
+    // Respuesta con todas las mÃ©tricas
     const analytics = {
       event: {
         id: event.id,
@@ -223,8 +223,9 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching analytics:', error)
     return NextResponse.json(
-      { error: 'Error al obtener analíticas' },
+      { error: 'Error al obtener analÃ­ticas' },
       { status: 500 }
     )
   }
 }
+

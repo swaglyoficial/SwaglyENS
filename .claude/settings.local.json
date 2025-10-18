@@ -13,7 +13,10 @@
       "Bash(git push:*)",
       "WebFetch(domain:docs.reown.com)",
       "WebFetch(domain:docs.polkadot.com)",
-      "Bash(npx shadcn@latest add:*)"
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(npm run build:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)"
     ],
     "deny": [],
     "ask": []

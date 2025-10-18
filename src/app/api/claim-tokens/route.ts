@@ -185,6 +185,34 @@ export async function POST(request: NextRequest) {
     console.log('💰 Cantidad en wei (con decimales):', quantityInWei.toString())
     console.log('📊 Decimales del token:', TOKEN_DECIMALS)
 
+
+    const [
+      proof,
+      quantityLimitPerWalletRaw,
+      pricePerTokenRaw,
+      currency,
+    ] = DEFAULT_CLAIM_CONFIG.allowlistProof as [
+      readonly `0x${string}`[],
+      number | bigint,
+      number | bigint,
+      string,
+    ]
+
+    const quantityLimitPerWalletBigInt =
+      typeof quantityLimitPerWalletRaw === 'bigint'
+        ? quantityLimitPerWalletRaw
+        : BigInt(quantityLimitPerWalletRaw)
+
+    const pricePerTokenBigInt =
+      typeof pricePerTokenRaw === 'bigint' ? pricePerTokenRaw : BigInt(pricePerTokenRaw)
+
+    const allowlistProof = {
+      proof,
+      quantityLimitPerWallet: quantityLimitPerWalletBigInt,
+      pricePerToken: pricePerTokenBigInt,
+      currency,
+    }
+
     // Preparar la llamada al contrato
     const transaction = prepareContractCall({
       contract,
@@ -195,8 +223,8 @@ export async function POST(request: NextRequest) {
         quantityInWei,                       // _quantity: cantidad en wei (con decimales)
         DEFAULT_CLAIM_CONFIG.currency,       // _currency: moneda (nativa o gratis)
         BigInt(DEFAULT_CLAIM_CONFIG.pricePerToken), // _pricePerToken: 0 = gratis
-        DEFAULT_CLAIM_CONFIG.allowlistProof, // _allowlistProof: array [proof, limit, price, currency]
-        DEFAULT_CLAIM_CONFIG.data,           // _data: sin datos adicionales
+        allowlistProof, // _allowlistProof: struct sin restricciones
+        DEFAULT_CLAIM_CONFIG.data as `0x${string}`,           // _data: sin datos adicionales
       ],
     })
 

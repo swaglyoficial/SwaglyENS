@@ -12,7 +12,9 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { ConnectButton } from '@/components/connect-button'
 import { AddPassportDialog } from '@/components/add-passport-dialog'
 import { ScanMerchDialog } from '@/components/scan-merch-dialog'
-import { Loader2, Ticket, CheckCircle2, Clock, Scan, Calendar } from 'lucide-react'
+import { TokenBalance } from '@/components/token-balance'
+import { BottomNavigation } from '@/components/bottom-navigation'
+import { Loader2, Ticket, CheckCircle2, Clock, Scan, Calendar, User, Plus } from 'lucide-react'
 
 /**
  * Tipos de datos
@@ -184,7 +186,7 @@ export default function DashboardPage() {
   const { completed, pending } = getActivitiesByStatus(currentPassport)
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-black text-foreground">
+    <main className="relative min-h-screen overflow-hidden bg-black text-foreground pb-20">
       {/* Background effects - optimizados para móviles */}
       <div className="pointer-events-none absolute inset-0">
         <div className="neon-grid absolute inset-0 opacity-10 sm:opacity-20" aria-hidden />
@@ -192,49 +194,26 @@ export default function DashboardPage() {
         <div className="absolute -right-10 top-10 h-56 w-56 rounded-full bg-cyan-500/15 blur-[100px] sm:right-[-12%] sm:top-20 sm:h-72 sm:w-72 sm:blur-[120px]" aria-hidden />
       </div>
 
-      {/* Content - con padding responsive */}
-      <div className="relative z-10 mx-auto max-w-5xl px-4 py-6 sm:p-6 lg:p-8">
-        {/* Header - más compacto en móviles */}
-        <div className="mb-6 text-center sm:mb-8">
-          <Badge className="mb-3 border border-cyan-500/40 bg-cyan-500/10 text-cyan-100 text-xs sm:mb-4 sm:text-sm">
-            <Ticket className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
-            Tu Pasaporte Digital
-          </Badge>
-          <h1 className="mb-3 text-2xl font-bold text-white sm:mb-4 sm:text-3xl lg:text-4xl">
-            ¡Hola, {user?.nickname}!
-          </h1>
-          <div className="flex items-center justify-center">
-            <div className="w-full max-w-xs sm:w-auto">
-              <ConnectButton />
+      {/* Content - con padding responsive y espacio para bottom nav */}
+      <div className="relative z-10 mx-auto max-w-5xl px-4 py-4 sm:py-6">
+        {/* Header compacto con usuario y balance */}
+        <div className="mb-4 flex items-center justify-between gap-3 sm:mb-6">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-cyan-500/40 bg-cyan-500/10 sm:h-10 sm:w-10">
+              <User className="h-4 w-4 text-cyan-400 sm:h-5 sm:w-5" />
             </div>
+            <span className="text-sm font-semibold text-white sm:text-base">
+              {user?.nickname}
+            </span>
           </div>
+          <ConnectButton />
         </div>
 
-        {/* Pasaportes y botón agregar - mejorado para móviles */}
-        <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:gap-4">
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-            <span className="w-full text-center text-xs text-cyan-200/70 sm:w-auto sm:text-left sm:text-sm">
-              <Calendar className="mr-1 inline h-3 w-3 sm:h-4 sm:w-4" />
-              Tus Pasaportes:
-            </span>
-            {user?.passports.map((passport, index) => (
-              <Button
-                key={passport.id}
-                variant={index === currentPassportIndex ? "default" : "outline"}
-                size="sm"
-                onClick={() => setCurrentPassportIndex(index)}
-                className={
-                  index === currentPassportIndex
-                    ? "border border-cyan-500/60 bg-cyan-500/30 text-cyan-100 hover:bg-cyan-500/40 text-xs sm:text-sm"
-                    : "border-cyan-500/30 text-cyan-200 hover:bg-cyan-500/10 text-xs sm:text-sm"
-                }
-              >
-                {passport.event.name}
-              </Button>
-            ))}
-          </div>
-          {user && (
-            <div className="flex justify-center sm:justify-end">
+        {/* Botón agregar pasaporte y selector de pasaportes */}
+        {user && (
+          <div className="mb-4 space-y-3 sm:mb-6">
+            {/* Agregar pasaporte */}
+            <div className="flex justify-center sm:justify-start">
               <AddPassportDialog
                 userId={user.id}
                 existingEventIds={user.passports.map(p => p.event.id)}
@@ -243,8 +222,29 @@ export default function DashboardPage() {
                 }}
               />
             </div>
-          )}
-        </div>
+
+            {/* Selector de pasaportes si hay más de uno */}
+            {user.passports.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {user.passports.map((passport, index) => (
+                  <Button
+                    key={passport.id}
+                    variant={index === currentPassportIndex ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPassportIndex(index)}
+                    className={
+                      index === currentPassportIndex
+                        ? "shrink-0 border border-cyan-500/60 bg-cyan-500/30 text-cyan-100 hover:bg-cyan-500/40"
+                        : "shrink-0 border-cyan-500/30 text-cyan-200 hover:bg-cyan-500/10"
+                    }
+                  >
+                    {passport.event.name}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Passport Card - optimizado para móviles */}
         <Card className="mb-4 border-cyan-500/20 bg-black/40 backdrop-blur-xl sm:mb-6">
@@ -298,91 +298,72 @@ export default function DashboardPage() {
 
             <Separator className="bg-cyan-500/20" />
 
-            {/* Activities Section - responsive heights */}
-            <div className="space-y-4">
-              {/* Pending Activities */}
-              {pending.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="flex items-center gap-2 text-base font-semibold text-white sm:text-lg">
-                    <Clock className="h-4 w-4 text-cyan-400 sm:h-5 sm:w-5" />
-                    Actividades Pendientes
-                  </h3>
-                  <ScrollArea className="h-[180px] rounded-lg border border-cyan-500/20 bg-black/30 p-2 sm:h-[200px] sm:p-3">
-                    <div className="space-y-2">
-                      {pending.map((pa) => (
-                        <div
-                          key={pa.activityId}
-                          className="rounded-lg border border-cyan-500/20 bg-black/40 p-2.5 transition-colors hover:bg-cyan-500/10 sm:p-3"
-                        >
-                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-white sm:text-base">{pa.activity.name}</p>
-                              <p className="mt-1 text-xs text-cyan-200/60 sm:text-sm">
-                                {pa.activity.description}
-                              </p>
-                              {pa.activity.sponsor && (
-                                <Badge
-                                  variant="outline"
-                                  className="mt-2 border-cyan-500/30 text-cyan-300 text-xs"
-                                >
-                                  {pa.activity.sponsor.name}
-                                </Badge>
-                              )}
-                            </div>
-                            <Badge className="border-yellow-500/40 bg-yellow-500/10 text-yellow-200 text-xs shrink-0 self-start sm:self-auto">
-                              {pa.activity.numOfTokens} tokens
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </div>
-              )}
+            {/* Activities Section - diseño simplificado */}
+            <div className="space-y-3">
+              {/* Todas las actividades en una lista */}
+              <div className="space-y-2">
+                {currentPassport.activities.map((pa) => {
+                  const isCompleted = pa.status === 'completed'
+                  return (
+                    <div
+                      key={pa.activityId}
+                      className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
+                        isCompleted
+                          ? 'border-green-500/20 bg-green-500/5 opacity-75'
+                          : 'border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-500/10'
+                      }`}
+                    >
+                      {/* Icono o imagen del sponsor */}
+                      <div
+                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ${
+                          isCompleted ? 'bg-green-500/20' : 'bg-cyan-500/20'
+                        }`}
+                      >
+                        {pa.activity.sponsor ? (
+                          <span className="text-xs font-bold text-white">
+                            {pa.activity.sponsor.name.substring(0, 2).toUpperCase()}
+                          </span>
+                        ) : (
+                          <Ticket className="h-6 w-6 text-cyan-400" />
+                        )}
+                      </div>
 
-              {/* Completed Activities */}
-              {completed.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="flex items-center gap-2 text-base font-semibold text-white sm:text-lg">
-                    <CheckCircle2 className="h-4 w-4 text-green-400 sm:h-5 sm:w-5" />
-                    Actividades Completadas
-                  </h3>
-                  <ScrollArea className="h-[180px] rounded-lg border border-green-500/20 bg-black/30 p-2 sm:h-[200px] sm:p-3">
-                    <div className="space-y-2">
-                      {completed.map((pa) => (
-                        <div
-                          key={pa.activityId}
-                          className="rounded-lg border border-green-500/20 bg-black/40 p-2.5 opacity-75 sm:p-3"
+                      {/* Info de la actividad */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-white truncate">
+                          {pa.activity.name}
+                        </p>
+                        <p className="text-xs text-cyan-200/60 line-clamp-1">
+                          {pa.activity.description}
+                        </p>
+                      </div>
+
+                      {/* Tokens */}
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <Badge
+                          className={`text-xs ${
+                            isCompleted
+                              ? 'border-green-500/40 bg-green-500/10 text-green-200'
+                              : 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200'
+                          }`}
                         >
-                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-white sm:text-base">{pa.activity.name}</p>
-                              <p className="mt-1 text-xs text-green-200/60 sm:text-sm">
-                                {pa.activity.description}
-                              </p>
-                              {pa.activity.sponsor && (
-                                <Badge
-                                  variant="outline"
-                                  className="mt-2 border-green-500/30 text-green-300 text-xs"
-                                >
-                                  {pa.activity.sponsor.name}
-                                </Badge>
-                              )}
-                            </div>
-                            <Badge className="border-green-500/40 bg-green-500/10 text-green-200 text-xs shrink-0 self-start sm:self-auto">
-                              ✓ {pa.activity.numOfTokens} tokens
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
+                          {pa.activity.numOfTokens} SWAG
+                        </Badge>
+                        {isCompleted && (
+                          <CheckCircle2 className="h-4 w-4 text-green-400" />
+                        )}
+                      </div>
                     </div>
-                  </ScrollArea>
-                </div>
-              )}
+                  )
+                })}
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Bottom Navigation */}
+      <BottomNavigation />
     </main>
   )
 }

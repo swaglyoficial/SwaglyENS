@@ -46,6 +46,7 @@ export default function OnboardingPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingEvents, setIsLoadingEvents] = useState(true)
   const [error, setError] = useState('')
+  const [hasExistingNickname, setHasExistingNickname] = useState(false)
 
   /**
    * Redirigir a home si no está conectado
@@ -57,18 +58,34 @@ export default function OnboardingPage() {
   }, [isConnected, router])
 
   /**
-   * Cargar eventos disponibles al montar el componente
+   * Cargar datos del usuario existente (si existe) y eventos disponibles
    */
   useEffect(() => {
-    async function fetchEvents() {
+    async function fetchInitialData() {
       try {
-        const response = await fetch('/api/events')
-        const data = await response.json()
+        // 1. Cargar eventos
+        const eventsResponse = await fetch('/api/events')
+        const eventsData = await eventsResponse.json()
 
-        if (response.ok) {
-          setEvents(data.events || [])
+        if (eventsResponse.ok) {
+          setEvents(eventsData.events || [])
         } else {
           setError('Error al cargar eventos')
+        }
+
+        // 2. Verificar si el usuario ya existe y pre-cargar su nickname
+        if (address) {
+          const userResponse = await fetch(`/api/users/${address}`)
+
+          if (userResponse.ok) {
+            const userData = await userResponse.json()
+            // Si el usuario existe, pre-cargar su nickname y marcarlo como existente
+            if (userData.user && userData.user.nickname) {
+              setNickname(userData.user.nickname)
+              setHasExistingNickname(true) // Marcar que ya tiene un apodo registrado
+            }
+          }
+          // Si el usuario no existe (404), el nickname permanece vacío
         }
       } catch (err) {
         setError('Error al conectar con el servidor')
@@ -78,9 +95,9 @@ export default function OnboardingPage() {
     }
 
     if (isConnected) {
-      fetchEvents()
+      fetchInitialData()
     }
-  }, [isConnected])
+  }, [isConnected, address])
 
   /**
    * Maneja el envío del formulario
@@ -177,9 +194,13 @@ export default function OnboardingPage() {
               Bienvenido a Swagly
             </Badge>
           </div>
-          <CardTitle className="text-xl text-white sm:text-2xl">Completa tu perfil</CardTitle>
+          <CardTitle className="text-xl text-white sm:text-2xl">
+            {hasExistingNickname ? 'Selecciona un evento' : 'Completa tu perfil'}
+          </CardTitle>
           <CardDescription className="text-sm text-cyan-200/70 sm:text-base">
-            Ingresa tu apodo y selecciona el evento al que asistes
+            {hasExistingNickname
+              ? 'Selecciona el evento al que quieres asistir'
+              : 'Ingresa tu apodo y selecciona el evento al que asistes'}
           </CardDescription>
         </CardHeader>
 
@@ -196,9 +217,15 @@ export default function OnboardingPage() {
                 placeholder="Tu apodo único"
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
-                className="border-cyan-500/30 bg-black/50 text-white placeholder:text-cyan-200/40 focus:border-cyan-500/60 text-sm sm:text-base"
-                disabled={isLoading}
+                className="border-cyan-500/30 bg-black/50 text-white placeholder:text-cyan-200/40 focus:border-cyan-500/60 text-sm sm:text-base disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={isLoading || hasExistingNickname}
+                readOnly={hasExistingNickname}
               />
+              {hasExistingNickname && (
+                <p className="text-xs text-cyan-300/70 sm:text-sm">
+                  Tu apodo ya está registrado. Solo selecciona el evento.
+                </p>
+              )}
             </div>
 
             {/* Event Select */}

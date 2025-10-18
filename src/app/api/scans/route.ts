@@ -147,7 +147,14 @@ export async function POST(request: NextRequest) {
     // Llamar a la API de claim-tokens para enviar los tokens desde el backend
     // Esto usa la API de Thirdweb para ejecutar la transacción gasless
     try {
-      const claimResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/claim-tokens`, {
+      // Construir la URL base correctamente para desarrollo y producción
+      const protocol = request.headers.get('x-forwarded-proto') || 'http'
+      const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'localhost:3000'
+      const baseUrl = `${protocol}://${host}`
+
+      console.log('📡 Llamando a claim-tokens API:', `${baseUrl}/api/claim-tokens`)
+
+      const claimResponse = await fetch(`${baseUrl}/api/claim-tokens`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

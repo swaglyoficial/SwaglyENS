@@ -1,17 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 /**
  * GET /api/passports/[userId]
- * Obtiene todos los pasaportes de un usuario específico
+ * Obtiene todos los pasaportes de un usuario especifico
  * Incluye evento, actividades y progreso
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const { userId } = params
+    const { userId } = await params
 
     // Obtener todos los pasaportes del usuario
     const passports = await prisma.passport.findMany({

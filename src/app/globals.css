@@ -89,6 +89,7 @@ body {
 /* Mejorar scrolling en móviles */
 * {
   -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
 }
 
 /* Prevenir zoom en inputs en iOS */
@@ -97,6 +98,25 @@ body {
   select,
   textarea {
     font-size: 16px !important;
+  }
+}
+
+/* Mejorar touch targets en móviles */
+button,
+a,
+[role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Optimizar animaciones para dispositivos móviles */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

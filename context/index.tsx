@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ============================================
  * CONTEXT PROVIDER - CONFIGURACIÓN DE REOWN APPKIT
  * ============================================
@@ -17,12 +17,14 @@
 
 'use client'
 
-import { wagmiAdapter, projectId } from '@/../config'
+import { wagmiAdapter, projectId, networks } from '@/../config'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createAppKit } from '@reown/appkit/react'
-import { mainnet, arbitrum, scroll, base, polygon, scrollSepolia } from '@reown/appkit/networks'
-import React, { type ReactNode, useRef } from 'react'
+import { createAppKit, type CreateAppKit } from '@reown/appkit/react'
+import { mainnet, arbitrum, scroll, base, polygon, scrollSepolia, solanaTestnet } from '@reown/appkit/networks'
+import React, { type ReactNode, useEffect, useState } from 'react'
 import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi'
+import { SolanaAdapter } from "@reown/appkit-adapter-solana/react";
+import { sepolia } from 'thirdweb/chains'
 
 // ============================================
 // CONFIGURACIÓN DE TANSTACK QUERY
@@ -37,6 +39,8 @@ const queryClient = new QueryClient()
 if (!projectId) {
   throw new Error('Project ID is not defined')
 }
+
+const solanaWeb3JsAdapter = new SolanaAdapter();
 
 // ============================================
 // METADATA DE LA APLICACIÓN
@@ -73,14 +77,19 @@ const tokens = {
 // CONFIGURACIÓN DE REOWN APPKIT
 // ============================================
 /**
+ * Las redes se importan desde el archivo de configuración (config/index.tsx)
+ * para asegurar que sean las mismas que usa wagmiAdapter
+ */
+
+/**
  * Configuración principal de Reown AppKit
  *
  * AppKit es la UI para conectar wallets y gestionar conexiones
  * Soporta múltiples wallets: MetaMask, WalletConnect, Coinbase, etc.
  */
-const appKitConfig = {
+const appKitConfig: CreateAppKit = {
   // Adaptadores de conexión (Wagmi para EVM chains)
-  adapters: [wagmiAdapter],
+  adapters: [wagmiAdapter,solanaWeb3JsAdapter],
 
   // Project ID de Reown (obtenido de https://dashboard.reown.com)
   projectId,
@@ -90,16 +99,6 @@ const appKitConfig = {
   // ============================================
   /**
    * Lista de todas las redes que el usuario puede seleccionar
-   *
-   * Mainnets (Producción):
-   * - mainnet: Ethereum Mainnet
-   * - arbitrum: Arbitrum One (Layer 2 de Ethereum)
-   * - scroll: Scroll (Layer 2 de Ethereum)
-   * - base: Base (Layer 2 de Coinbase)
-   * - polygon: Polygon (sidechain de Ethereum)
-   *
-   * Testnets (Desarrollo):
-   * - scrollSepolia: Scroll Sepolia Testnet (red principal para Swagly)
    */
   networks: [
     mainnet,              // Ethereum Mainnet
@@ -108,8 +107,8 @@ const appKitConfig = {
     base,                 // Base (Layer 2)
     polygon,              // Polygon
     scrollSepolia,        // Scroll Sepolia Testnet ✅ Red principal de desarrollo
+    solanaTestnet
   ],
-
   // ============================================
   // RED POR DEFECTO
   // ============================================
@@ -169,13 +168,16 @@ const appKitConfig = {
  * @param cookies - Cookies del servidor para SSR (Server-Side Rendering)
  */
 function ContextProvider({ children, cookies }: { children: ReactNode; cookies: string | null }) {
-  // Referencia para mantener una única instancia de AppKit
-  const appKitRef = useRef<ReturnType<typeof createAppKit> | null>(null)
+  // Estado para controlar si AppKit ya se inicializó
+  const [appKitInitialized, setAppKitInitialized] = useState(false)
 
-  // Crear AppKit solo una vez (evita recrearlo en cada render)
-  if (!appKitRef.current) {
-    appKitRef.current = createAppKit(appKitConfig)
-  }
+  // Inicializar AppKit solo una vez después de que el componente se monte
+  useEffect(() => {
+    if (!appKitInitialized) {
+      createAppKit(appKitConfig)
+      setAppKitInitialized(true)
+    }
+  }, [appKitInitialized])
 
   // Inicializar estado de Wagmi desde cookies (para SSR)
   const initialState = cookieToInitialState(wagmiAdapter.wagmiConfig as Config, cookies)
