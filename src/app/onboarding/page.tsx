@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAccount } from 'wagmi'
+import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -34,7 +34,7 @@ interface Event {
  */
 export default function OnboardingPage() {
   const router = useRouter()
-  const { address, isConnected } = useAccount()
+  const { isConnected, address } = useWalletConnection()
 
   // Estados del formulario
   const [nickname, setNickname] = useState('')

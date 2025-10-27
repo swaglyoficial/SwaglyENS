@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAccount } from 'wagmi'
+import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ConnectButton } from '@/components/connect-button'
@@ -15,18 +15,13 @@ import { User, Loader2, HelpCircle, Mail } from 'lucide-react'
  */
 export default function InfoPage() {
   const router = useRouter()
-  const { address, isConnected } = useAccount()
+  const { isConnected, address } = useWalletConnection()
 
   /**
-   * Redirigir a home si no está conectado
+   * NO redirigir - permitir ver la página sin wallet
    */
-  useEffect(() => {
-    if (!isConnected) {
-      router.push('/')
-    }
-  }, [isConnected, router])
 
-  // Mostrar loader mientras verifica conexión
+  // Mostrar loader si no está conectado
   if (!isConnected) {
     return (
       <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black text-foreground">

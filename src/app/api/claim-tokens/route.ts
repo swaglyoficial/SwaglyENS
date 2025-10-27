@@ -3,8 +3,8 @@ import { createThirdwebClient, getContract, prepareContractCall, sendTransaction
 import { privateKeyToAccount } from 'thirdweb/wallets'
 import { defineChain } from 'thirdweb/chains'
 import {
-  SWAGLY_CONTRACT_ADDRESS,
-  SCROLL_SEPOLIA_CHAIN_ID,
+  SWAG_TOKEN_ADDRESS,
+  SCROLL_MAINNET_CHAIN_ID,
   THIRDWEB_SECRET_KEY,
   CREATOR_WALLET_ADDRESS,
   CREATOR_WALLET_PRIVATE_KEY,
@@ -93,8 +93,8 @@ export async function POST(request: NextRequest) {
     console.log('====================================')
     console.log('🎫 INICIANDO CLAIM DE TOKENS')
     console.log('====================================')
-    console.log('📍 Contrato:', SWAGLY_CONTRACT_ADDRESS)
-    console.log('🌐 Chain ID:', SCROLL_SEPOLIA_CHAIN_ID)
+    console.log('📍 Contrato:', SWAG_TOKEN_ADDRESS)
+    console.log('🌐 Chain ID:', SCROLL_MAINNET_CHAIN_ID)
     console.log('👤 Receptor:', receiverAddress)
     console.log('💰 Cantidad:', quantity)
     console.log('🎯 Actividad:', activityName || 'No especificada')
@@ -109,14 +109,14 @@ export async function POST(request: NextRequest) {
       secretKey: THIRDWEB_SECRET_KEY,
     })
 
-    // Definir la chain (Scroll Sepolia)
-    const chain = defineChain(SCROLL_SEPOLIA_CHAIN_ID)
+    // Definir la chain (Scroll Mainnet)
+    const chain = defineChain(SCROLL_MAINNET_CHAIN_ID)
 
     // Obtener el contrato
     const contract = getContract({
       client,
       chain,
-      address: SWAGLY_CONTRACT_ADDRESS,
+      address: SWAG_TOKEN_ADDRESS,
     })
 
     console.log('✅ Cliente y contrato creados')
@@ -266,8 +266,8 @@ export async function POST(request: NextRequest) {
         quantity,
         activityName,
         transactionHash: result.transactionHash,
-        chainId: SCROLL_SEPOLIA_CHAIN_ID,
-        contractAddress: SWAGLY_CONTRACT_ADDRESS,
+        chainId: SCROLL_MAINNET_CHAIN_ID,
+        contractAddress: SWAG_TOKEN_ADDRESS,
       },
     })
   } catch (error) {
@@ -289,7 +289,7 @@ export async function POST(request: NextRequest) {
     // Error de fondos insuficientes
     if (errorDetails.includes('insufficient funds') || errorDetails.includes('out of gas')) {
       errorMessage = 'Fondos insuficientes'
-      errorDetails = 'La wallet del creador no tiene suficiente ETH en Scroll Sepolia para pagar el gas. Agrega fondos.'
+      errorDetails = 'La wallet del creador no tiene suficiente ETH en Scroll Mainnet para pagar el gas. Agrega fondos.'
     }
 
     // Error de conexión a la blockchain
@@ -317,8 +317,8 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   return NextResponse.json({
     message: 'Endpoint para reclamar tokens usando Thirdweb SDK',
-    contractAddress: SWAGLY_CONTRACT_ADDRESS,
-    chainId: SCROLL_SEPOLIA_CHAIN_ID,
+    contractAddress: SWAG_TOKEN_ADDRESS,
+    chainId: SCROLL_MAINNET_CHAIN_ID,
     claimConfig: DEFAULT_CLAIM_CONFIG,
     creatorWallet: CREATOR_WALLET_ADDRESS,
     usage: {
@@ -331,7 +331,7 @@ export async function GET() {
     },
     notes: [
       'La wallet del creador debe tener permisos MINTER en el contrato',
-      'La wallet del creador debe tener ETH en Scroll Sepolia para pagar gas',
+      'La wallet del creador debe tener ETH en Scroll Mainnet para pagar gas',
       'El usuario NO necesita firmar la transacción ni pagar gas',
       'Los tokens son enviados automáticamente desde el backend',
     ],

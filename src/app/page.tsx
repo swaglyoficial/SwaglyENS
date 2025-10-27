@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { useAccount } from "wagmi"
 import Image from "next/image"
 import { Scan, Trophy, Gift } from "lucide-react"
 
 import { ConnectButton } from "@/components/connect-button"
+import { useWalletConnection } from "@/hooks/useWalletConnection"
 
 /**
  * Página principal de Swagly
@@ -14,15 +14,16 @@ import { ConnectButton } from "@/components/connect-button"
  */
 export default function Home() {
   const router = useRouter()
-  const { address, isConnected } = useAccount()
+  const { isConnected, address } = useWalletConnection()
+  const hasRedirected = useRef(false)
 
   /**
-   * Verifica el estado del usuario cuando conecta su wallet
-   * y redirige a la página de inicio
+   * Redirigir a /inicio SOLO cuando se conecta por primera vez
+   * Usar un ref para evitar redirecciones múltiples
    */
   useEffect(() => {
-    if (isConnected && address) {
-      // Redirigir a la página de inicio cuando se conecta la wallet
+    if (isConnected && address && !hasRedirected.current) {
+      hasRedirected.current = true
       router.push('/inicio')
     }
   }, [isConnected, address, router])

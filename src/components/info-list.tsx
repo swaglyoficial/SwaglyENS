@@ -1,13 +1,15 @@
-﻿'use client'
+/**
+ * ============================================
+ * INFO LIST - LISTA DE INFORMACIÓN
+ * ============================================
+ *
+ * Componente que muestra información de la wallet conectada usando Thirdweb
+ */
 
-import { useEffect, useMemo } from "react"
-import {
-  useAppKitAccount,
-  useAppKitEvents,
-  useAppKitState,
-  useAppKitTheme,
-  useWalletInfo
-} from "@reown/appkit/react"
+'use client'
+
+import { useMemo } from "react"
+import { useActiveAccount, useActiveWallet } from "thirdweb/react"
 
 import { Badge } from "@/components/ui/badge"
 import {
@@ -29,71 +31,43 @@ const formatValue = (value: unknown) => {
 }
 
 export const InfoList = () => {
-  const kitTheme = useAppKitTheme()
-  const state = useAppKitState()
-  const { address, caipAddress, isConnected, embeddedWalletInfo } = useAppKitAccount()
-  const events = useAppKitEvents()
-  const walletInfo = useWalletInfo()
+  const account = useActiveAccount()
+  const wallet = useActiveWallet()
   const mounted = useClientMounted()
 
-  useEffect(() => {
-    console.log("Events: ", events)
-  }, [events])
+  const isConnected = !!account
+  const address = account?.address
+  const chainId = wallet?.getChain()?.id
+  const chainName = wallet?.getChain()?.name
 
   const sections = useMemo(
     () => [
       {
         id: "account",
         title: "Cuenta",
-        description: "Datos expuestos por useAppKitAccount.",
+        description: "Datos de la cuenta conectada.",
         badge: isConnected ? "Conectada" : "Desconectada",
         items: [
           { label: "Address", value: formatValue(address) },
-          { label: "CAIP", value: formatValue(caipAddress) },
-          { label: "Tipo", value: formatValue(embeddedWalletInfo?.accountType) },
-          { label: "Email", value: formatValue(embeddedWalletInfo?.user?.email) },
-          { label: "Usuario", value: formatValue(embeddedWalletInfo?.user?.username) },
-          { label: "Provider", value: formatValue(embeddedWalletInfo?.authProvider) }
-        ]
-      },
-      {
-        id: "theme",
-        title: "Tema",
-        description: "Preferencias visuales en AppKit.",
-        items: [{ label: "Modo", value: formatValue(kitTheme.themeMode) }]
-      },
-      {
-        id: "state",
-        title: "Estado",
-        description: "Valores reactivos de useAppKitState.",
-        items: [
-          { label: "activeChain", value: formatValue(state.activeChain) },
-          { label: "loading", value: formatValue(state.loading) },
-          { label: "open", value: formatValue(state.open) }
+          { label: "Chain ID", value: formatValue(chainId) },
+          { label: "Chain Name", value: formatValue(chainName) },
         ]
       },
       {
         id: "wallet",
         title: "Wallet",
-        description: "Información básica de la wallet activa.",
+        description: "Información de la wallet activa.",
         items: [
-          { label: "Nombre", value: formatValue(walletInfo.walletInfo?.name) }
+          { label: "Wallet ID", value: formatValue(wallet?.id) },
         ]
       }
     ],
     [
       address,
-      caipAddress,
-      embeddedWalletInfo?.accountType,
-      embeddedWalletInfo?.authProvider,
-      embeddedWalletInfo?.user?.email,
-      embeddedWalletInfo?.user?.username,
+      chainId,
+      chainName,
       isConnected,
-      kitTheme.themeMode,
-      state.activeChain,
-      state.loading,
-      state.open,
-      walletInfo.walletInfo?.name
+      wallet?.id
     ]
   )
 

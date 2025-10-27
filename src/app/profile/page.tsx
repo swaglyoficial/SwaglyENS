@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAccount } from 'wagmi'
+import { useWalletConnection } from '@/hooks/useWalletConnection'
 import Image from 'next/image'
 import { Loader2, User, Edit2, Check, X, Menu } from 'lucide-react'
 import { ConnectButton } from '@/components/connect-button'
@@ -18,7 +18,7 @@ interface UserProfile {
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { address, isConnected } = useAccount()
+  const { isConnected, address } = useWalletConnection()
 
   const [user, setUser] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -29,12 +29,7 @@ export default function ProfilePage() {
   const [successMessage, setSuccessMessage] = useState('')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  useEffect(() => {
-    if (!isConnected) {
-      router.push('/')
-      return
-    }
-  }, [isConnected, router])
+  // NO redirigir automáticamente - solo mostrar loader
 
   const fetchUserData = async () => {
     if (!address) return
@@ -48,7 +43,9 @@ export default function ProfilePage() {
         setUser(data.user)
         setNewNickname(data.user.nickname)
       } else {
-        router.push('/onboarding')
+        // No redirigir - mostrar formulario para crear perfil
+        setUser(null)
+        setIsEditing(true) // Activar modo edición para crear perfil
       }
     } catch (error) {
       console.error('Error fetching user data:', error)
@@ -91,6 +88,34 @@ export default function ProfilePage() {
     setError('')
 
     try {
+      // Si el usuario no existe, crearlo primero
+      if (!user) {
+        const createResponse = await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            walletAddress: address,
+            nickname: newNickname.trim()
+          }),
+        })
+
+        const createData = await createResponse.json()
+
+        if (createResponse.ok) {
+          setUser(createData.user)
+          setIsEditing(false)
+          setSuccessMessage('¡Perfil creado exitosamente!')
+          // Redirigir a inicio después de crear el perfil
+          setTimeout(() => {
+            router.push('/inicio')
+          }, 1500)
+        } else {
+          setError(createData.error || 'Error al crear el perfil')
+        }
+        return
+      }
+
+      // Si ya existe, actualizar el nickname
       const response = await fetch(`/api/users/${address}`, {
         method: 'PATCH',
         headers: {

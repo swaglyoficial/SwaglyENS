@@ -1,45 +1,41 @@
-import { useReadContract, useAccount } from 'wagmi'
-import { formatUnits } from 'viem'
-
 /**
- * Hook para obtener el balance de tokens SWAG del usuario conectado
- * Lee el balance del contrato ERC20 en Scroll Sepolia
+ * ============================================
+ * HOOK: useSwagBalance
+ * ============================================
  *
- * IMPORTANTE: No especificamos chainId para que wagmi use automáticamente
- * la red conectada del usuario. Esto evita conflictos con el formato CAIP-2
- * que usa Reown AppKit.
+ * Hook para obtener el balance de tokens SWAG del usuario conectado
+ * Lee el balance del contrato ERC20 en Scroll Sepolia usando Thirdweb
  */
 
-const SWAG_TOKEN_ADDRESS = '0x05668BC3Fb05c2894988142a0b730149122192eB' as const
+import { useActiveAccount, useReadContract } from 'thirdweb/react'
+import { getContract } from 'thirdweb'
+import { client, defaultChain, SWAG_TOKEN_ADDRESS } from '@/../config/thirdweb'
+import { toEther } from 'thirdweb'
 
-// ABI simplificado para balanceOf
-const ERC20_ABI = [
-  {
-    name: 'balanceOf',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'account', type: 'address' }],
-    outputs: [{ name: 'balance', type: 'uint256' }],
-  },
-] as const
+// Obtener el contrato del token SWAG en Scroll Mainnet
+const contract = getContract({
+  client,
+  chain: defaultChain,
+  address: SWAG_TOKEN_ADDRESS,
+})
 
 export function useSwagBalance() {
-  const { address } = useAccount()
+  const account = useActiveAccount()
 
-  const { data, isError, isLoading, refetch } = useReadContract({
-    address: SWAG_TOKEN_ADDRESS,
-    abi: ERC20_ABI,
-    functionName: 'balanceOf',
-    args: address ? [address] : undefined,
-    // No especificamos chainId - wagmi usa automáticamente la red conectada
-    query: {
-      enabled: !!address, // Solo ejecutar si hay una dirección conectada
-      refetchInterval: 10000, // Refrescar cada 10 segundos
+  const { data, isLoading, isError, refetch } = useReadContract({
+    contract,
+    method: 'function balanceOf(address account) view returns (uint256)',
+    params: account?.address ? [account.address] : undefined,
+    queryOptions: {
+      enabled: !!account?.address, // Solo ejecutar si hay una dirección conectada
+      refetchInterval: false, // NO refrescar automáticamente - solo manual con refetch()
+      refetchOnWindowFocus: false, // NO refrescar cuando la ventana recibe focus
+      refetchOnMount: true, // Solo refrescar cuando el componente se monta
     },
   })
 
   // Convertir balance de wei a tokens (18 decimales)
-  const balance = data ? parseFloat(formatUnits(data, 18)) : 0
+  const balance = data ? parseFloat(toEther(data)) : 0
 
   return {
     balance,

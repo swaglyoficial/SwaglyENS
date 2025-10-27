@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAccount } from 'wagmi'
+import { useRequireProfile } from '@/hooks/useRequireProfile'
 import Image from 'next/image'
 import { Loader2, CheckCircle2, Circle, Menu, X } from 'lucide-react'
 import { ConnectButton } from '@/components/connect-button'
@@ -55,7 +55,7 @@ interface User {
 
 export default function DashboardPage() {
   const router = useRouter()
-  const { address, isConnected } = useAccount()
+  const { hasProfile, isChecking, address, isConnected } = useRequireProfile()
 
   const [user, setUser] = useState<User | null>(null)
   const [currentPassport, setCurrentPassport] = useState<Passport | null>(null)
@@ -73,12 +73,7 @@ export default function DashboardPage() {
     return null
   }
 
-  useEffect(() => {
-    if (!isConnected) {
-      router.push('/')
-      return
-    }
-  }, [isConnected, router])
+  // NO redirigir automáticamente - solo mostrar loader
 
   const fetchUserData = async () => {
     if (!address) return

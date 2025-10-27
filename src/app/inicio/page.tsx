@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAccount } from 'wagmi'
 import { Button } from '@/components/ui/button'
+import { useRequireProfile } from '@/hooks/useRequireProfile'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -29,7 +29,7 @@ interface Event {
 
 export default function InicioPage() {
   const router = useRouter()
-  const { address, isConnected } = useAccount()
+  const { hasProfile, isChecking, address, isConnected } = useRequireProfile()
 
   const [nickname, setNickname] = useState('')
   const [selectedEventId, setSelectedEventId] = useState('')
@@ -42,12 +42,7 @@ export default function InicioPage() {
   const [hasExistingNickname, setHasExistingNickname] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  useEffect(() => {
-    if (!isConnected) {
-      router.push('/')
-      return
-    }
-  }, [isConnected, router])
+  // NO redirigir automáticamente - dejar que el usuario vea la página
 
   useEffect(() => {
     async function fetchInitialData() {

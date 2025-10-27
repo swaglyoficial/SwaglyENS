@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAccount } from 'wagmi'
+import { useRequireProfile } from '@/hooks/useRequireProfile'
 import Image from 'next/image'
 import { Loader2, ArrowRight, Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -35,17 +35,13 @@ interface User {
  */
 export default function EventsPage() {
   const router = useRouter()
-  const { address, isConnected } = useAccount()
+  const { hasProfile, isChecking, address, isConnected } = useRequireProfile()
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   useEffect(() => {
-    if (!isConnected) {
-      router.push('/')
-      return
-    }
-
+    // NO redirigir automáticamente - solo cargar datos si está conectado
     async function fetchUserData() {
       if (!address) return
 
@@ -66,7 +62,7 @@ export default function EventsPage() {
     }
 
     fetchUserData()
-  }, [isConnected, address, router])
+  }, [isConnected, isChecking, address, router])
 
   if (isLoading || !isConnected) {
     return (

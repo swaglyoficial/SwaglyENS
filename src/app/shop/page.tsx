@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAccount } from 'wagmi'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ConnectButton } from '@/components/connect-button'
 import { TokenBalance } from '@/components/token-balance'
 import { useSwagBalance } from '@/hooks/useSwagBalance'
 import { useTransferSwag } from '@/hooks/useTransferSwag'
+import { useRequireProfile } from '@/hooks/useRequireProfile'
 import { Loader2, ExternalLink, CheckCircle2, AlertCircle, Menu, X } from 'lucide-react'
 import {
   Dialog,
@@ -42,7 +42,7 @@ interface Purchase {
 
 export default function ShopPage() {
   const router = useRouter()
-  const { address, isConnected } = useAccount()
+  const { hasProfile, isChecking, address, isConnected } = useRequireProfile()
   const { balance, refetch } = useSwagBalance()
   const { transferSwag, hash, isPending, isConfirming, isConfirmed, error: transferError } = useTransferSwag()
 
@@ -99,11 +99,7 @@ export default function ShopPage() {
     }
   }, [isConnected, address])
 
-  useEffect(() => {
-    if (!isConnected) {
-      router.push('/')
-    }
-  }, [isConnected, router])
+  // NO redirigir automáticamente - solo mostrar loader si no está conectado
 
   useEffect(() => {
     if (isConfirmed && hash && selectedProduct) {
@@ -165,7 +161,7 @@ export default function ShopPage() {
 
   const hasEnoughBalance = (price: number) => balance >= price
 
-  if (!isConnected || loadingProducts) {
+  if (isChecking || !isConnected || !hasProfile || loadingProducts) {
     return (
       <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black">
         <Loader2 className="h-8 w-8 animate-spin text-[#5061EC]" />
@@ -552,10 +548,10 @@ export default function ShopPage() {
                         </div>
                         {purchase.txHash && (
                           <a
-                            href={`https://sepolia.scrollscan.com/tx/${purchase.txHash}`}
+                            href={`https://scrollscan.com/tx/${purchase.txHash}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-sm font-medium text-[#5061EC] transition-colors hover:text-[#5061EC]/80 hover:underline"
+                            className="inline-flex items-center gap-1 rounded-lg bg-black px-3 py-2 text-sm font-bold text-white transition-colors hover:bg-black/80 hover:underline"
                           >
                             Ver transacción
                             <ExternalLink className="h-4 w-4" />
@@ -601,7 +597,7 @@ export default function ShopPage() {
               </p>
               {hash && (
                 <a
-                  href={`https://sepolia.scrollscan.com/tx/${hash}`}
+                  href={`https://scrollscan.com/tx/${hash}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-blue-400 underline"

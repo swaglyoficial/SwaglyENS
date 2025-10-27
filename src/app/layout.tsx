@@ -1,6 +1,5 @@
 ﻿import type { Metadata, Viewport } from "next";
 
-import { headers } from "next/headers";
 import "./globals.css";
 import ContextProvider from "@/../context";
 import PWAProvider from "@/components/pwa-provider";
@@ -53,13 +52,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const headersData = await headers();
-  const cookies = headersData.get("cookie");
-
   return (
     <html lang="es">
       <body>
-        <ContextProvider cookies={cookies}>
+        <ContextProvider>
           <PWAProvider />
           {children}
         </ContextProvider>

@@ -35,17 +35,29 @@ export const THIRDWEB_CLIENT_ID = process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID || 
 export const THIRDWEB_SECRET_KEY = process.env.THIRDWEB_SECRET_KEY || 'w2eFsou5nA2a0Bnkce1p-vf2lyr_iDXtKUUvdMUNp6KdRR8452ipc29Bs3CtWESrdlTyQVrrTmpdjQrbOK-80A'
 
 /**
- * Dirección del smart contract de Swagly (ERC-1155)
- * Desplegado en Scroll Sepolia testnet
+ * Dirección del contrato SWAG Token (ERC-20)
+ * Desplegado en Scroll Mainnet
  */
-export const SWAGLY_CONTRACT_ADDRESS = '0x05668BC3Fb05c2894988142a0b730149122192eB'
+export const SWAG_TOKEN_ADDRESS = '0xb1Ba6FfC5b45df4e8c58D4b2C7Ab809b7D1aa8E1'
 
 /**
- * Chain ID de Scroll Sepolia
+ * Alias para mantener compatibilidad con código existente
+ * @deprecated Usa SWAG_TOKEN_ADDRESS en su lugar
+ */
+export const SWAGLY_CONTRACT_ADDRESS = SWAG_TOKEN_ADDRESS
+
+/**
+ * Chain ID de Scroll Mainnet
  * - Scroll Sepolia: 534351
  * - Scroll Mainnet: 534352
  */
-export const SCROLL_SEPOLIA_CHAIN_ID = 534351
+export const SCROLL_MAINNET_CHAIN_ID = 534352
+
+/**
+ * Alias para mantener compatibilidad con código existente
+ * @deprecated Usa SCROLL_MAINNET_CHAIN_ID en su lugar
+ */
+export const SCROLL_SEPOLIA_CHAIN_ID = SCROLL_MAINNET_CHAIN_ID
 
 /**
  * URL de la API de Thirdweb para ejecutar transacciones
