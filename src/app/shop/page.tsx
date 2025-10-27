@@ -3,293 +3,615 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAccount } from 'wagmi'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ConnectButton } from '@/components/connect-button'
-import { BottomNavigation } from '@/components/bottom-navigation'
+import { TokenBalance } from '@/components/token-balance'
 import { useSwagBalance } from '@/hooks/useSwagBalance'
-import { User, Loader2, ShoppingBag, Sparkles, AlertCircle, CheckCircle2, Shirt } from 'lucide-react'
+import { useTransferSwag } from '@/hooks/useTransferSwag'
+import { Loader2, ExternalLink, CheckCircle2, AlertCircle, Menu, X } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import Image from 'next/image'
 
-/**
- * Tipos de productos
- */
 interface Product {
-  id: 'sudadera' | 'cobija'
-  name: string
+  id: string
+  title: string
   description: string
   price: number
-  icon: React.ReactNode
-  available: boolean
+  imageUrl?: string | null
+  isAvailable: boolean
+  category?: string
 }
 
-/**
- * Página de Tienda SWAG
- * Muestra productos exclusivos para canjear con tokens SWAG
- * Solo disponible para usuarios conectados
- */
+interface Purchase {
+  id: string
+  productTitle: string
+  price: number
+  txHash: string | null
+  createdAt: string
+  product: {
+    imageUrl: string | null
+  }
+}
+
 export default function ShopPage() {
   const router = useRouter()
   const { address, isConnected } = useAccount()
-  const { balance, isLoading: isLoadingBalance, refetch } = useSwagBalance()
+  const { balance, refetch } = useSwagBalance()
+  const { transferSwag, hash, isPending, isConfirming, isConfirmed, error: transferError } = useTransferSwag()
 
-  // Estados para el flujo de compra
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
-  const [isPurchasing, setIsPurchasing] = useState(false)
   const [purchaseStatus, setPurchaseStatus] = useState<{
     type: 'success' | 'error' | null
     message: string
   }>({ type: null, message: '' })
 
-  /**
-   * Productos disponibles en la tienda
-   */
-  const products: Product[] = [
-    {
-      id: 'sudadera',
-      name: 'Sudadera Exclusiva SWAG',
-      description: 'Sudadera premium con diseño único del evento. Edición limitada.',
-      price: 150,
-      icon: <Shirt className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24" />,
-      available: true,
-    },
-    {
-      id: 'cobija',
-      name: 'Cobija Premium SWAG',
-      description: 'Cobija de alta calidad con el logo del evento. Perfecta para el invierno.',
-      price: 200,
-      icon: <Sparkles className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24" />,
-      available: true,
-    },
-  ]
+  const [products, setProducts] = useState<Product[]>([])
+  const [purchases, setPurchases] = useState<Purchase[]>([])
+  const [loadingProducts, setLoadingProducts] = useState(true)
+  const [loadingPurchases, setLoadingPurchases] = useState(true)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const CREATOR_WALLET_ADDRESS = '0x645AC03F1db27080A11d3f3a01030c455c7021bD'
 
-  /**
-   * Redirigir a home si no está conectado
-   */
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoadingProducts(true)
+        const response = await fetch('/api/products?availableOnly=false')
+        const data = await response.json()
+        setProducts(data.products || [])
+      } catch (error) {
+        console.error('Error fetching products:', error)
+        setProducts([])
+      } finally {
+        setLoadingProducts(false)
+      }
+    }
+
+    fetchProducts()
+  }, [])
+
+  useEffect(() => {
+    const fetchPurchases = async () => {
+      if (!address) return
+      try {
+        setLoadingPurchases(true)
+        const response = await fetch(`/api/purchases?walletAddress=${address}`)
+        const data = await response.json()
+        setPurchases(data.purchases || [])
+      } catch (error) {
+        console.error('Error fetching purchases:', error)
+        setPurchases([])
+      } finally {
+        setLoadingPurchases(false)
+      }
+    }
+
+    if (isConnected && address) {
+      fetchPurchases()
+    }
+  }, [isConnected, address])
+
   useEffect(() => {
     if (!isConnected) {
       router.push('/')
     }
   }, [isConnected, router])
 
-  /**
-   * Abrir diálogo de confirmación
-   */
+  useEffect(() => {
+    if (isConfirmed && hash && selectedProduct) {
+      const registerPurchase = async () => {
+        try {
+          await fetch('/api/purchases', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              productId: selectedProduct.id,
+              walletAddress: address,
+              txHash: hash,
+            }),
+          })
+          // Refresh purchases
+          const response = await fetch(`/api/purchases?walletAddress=${address}`)
+          const data = await response.json()
+          setPurchases(data.purchases || [])
+        } catch (error) {
+          console.error('Error registering purchase:', error)
+        }
+      }
+
+      registerPurchase()
+      setPurchaseStatus({
+        type: 'success',
+        message: '¡Compra exitosa! Los tokens han sido transferidos.',
+      })
+      setTimeout(() => refetch(), 2000)
+    }
+  }, [isConfirmed, hash, selectedProduct, address, refetch])
+
+  useEffect(() => {
+    if (transferError) {
+      setPurchaseStatus({
+        type: 'error',
+        message: transferError.message || 'Error al procesar la transacción',
+      })
+    }
+  }, [transferError])
+
   const handleBuyClick = (product: Product) => {
     setSelectedProduct(product)
     setShowConfirmDialog(true)
     setPurchaseStatus({ type: null, message: '' })
   }
 
-  /**
-   * Procesar la compra
-   */
-  const handleConfirmPurchase = async () => {
+  const handleConfirmPurchase = () => {
     if (!selectedProduct || !address) return
-
-    setIsPurchasing(true)
     setPurchaseStatus({ type: null, message: '' })
-
-    try {
-      // Llamar al endpoint API para procesar la compra
-      const response = await fetch('/api/shop/purchase', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          productId: selectedProduct.id,
-          fromAddress: address,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Error al procesar la compra')
-      }
-
-      // Mostrar mensaje de éxito
-      setPurchaseStatus({
-        type: 'success',
-        message: data.message || '¡Compra exitosa!',
-      })
-
-      // Refrescar balance después de 2 segundos
-      setTimeout(() => {
-        refetch()
-      }, 2000)
-    } catch (error) {
-      console.error('Error en la compra:', error)
-      setPurchaseStatus({
-        type: 'error',
-        message: error instanceof Error ? error.message : 'Error desconocido al procesar la compra',
-      })
-    } finally {
-      setIsPurchasing(false)
-    }
+    transferSwag(CREATOR_WALLET_ADDRESS, selectedProduct.price)
   }
 
-  /**
-   * Cerrar diálogo
-   */
   const handleCloseDialog = () => {
     setShowConfirmDialog(false)
     setSelectedProduct(null)
     setPurchaseStatus({ type: null, message: '' })
   }
 
-  /**
-   * Verificar si el usuario tiene suficiente balance
-   */
   const hasEnoughBalance = (price: number) => balance >= price
 
-  // Mostrar loader mientras verifica conexión
-  if (!isConnected || isLoadingBalance) {
+  if (!isConnected || loadingProducts) {
     return (
-      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black text-foreground">
-        <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
+      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black">
+        <Loader2 className="h-8 w-8 animate-spin text-[#5061EC]" />
       </main>
     )
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-black text-foreground pb-20">
-      {/* Background effects */}
+    <main className="relative min-h-screen overflow-hidden bg-black text-white pb-20">
+      {/* Background decorativo con líneas mejoradas */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="neon-grid absolute inset-0 opacity-10 sm:opacity-20" aria-hidden />
-        <div className="absolute -left-10 top-20 h-48 w-48 rounded-full bg-cyan-400/20 blur-[100px] sm:-left-20 sm:top-32 sm:h-64 sm:w-64 sm:blur-[120px]" aria-hidden />
-        <div className="absolute -right-10 top-10 h-56 w-56 rounded-full bg-cyan-500/15 blur-[100px] sm:right-[-12%] sm:top-20 sm:h-72 sm:w-72 sm:blur-[120px]" aria-hidden />
+        <div className="neon-grid absolute inset-0 opacity-5" aria-hidden />
+
+        {/* Línea vertical azul derecha */}
+        <div
+          className="absolute right-0 top-0 h-[600px] w-1 bg-gradient-to-b from-[#5061EC] via-[#5061EC]/60 to-transparent opacity-60"
+          aria-hidden
+        />
+
+        {/* Curva azul superior derecha */}
+        <div
+          className="absolute -right-32 -top-32 h-[300px] w-[300px] rounded-full border-[3px] border-[#5061EC] opacity-30 animate-pulse sm:-right-20 sm:-top-20 sm:h-[400px] sm:w-[400px]"
+          aria-hidden
+        />
+
+        {/* Curva azul decorativa centro */}
+        <svg
+          className="absolute right-0 top-1/4 h-[400px] w-[600px] opacity-40 sm:h-[500px] sm:w-[800px]"
+          viewBox="0 0 800 500"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden
+        >
+          <path
+            d="M800 0C800 100 700 200 500 250C300 300 200 350 100 500"
+            stroke="url(#blueGradientShop)"
+            strokeWidth="2"
+            fill="none"
+          />
+          <defs>
+            <linearGradient id="blueGradientShop" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#5061EC" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#5061EC" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+        </svg>
+
+        {/* Curva amarilla inferior izquierda */}
+        <svg
+          className="absolute -left-32 bottom-0 h-[300px] w-[500px] opacity-50 sm:-left-20 sm:h-[400px] sm:w-[700px]"
+          viewBox="0 0 700 400"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden
+        >
+          <path
+            d="M0 400C100 350 200 300 400 280C600 260 700 200 700 100"
+            stroke="url(#yellowGradientShop)"
+            strokeWidth="3"
+            fill="none"
+          />
+          <defs>
+            <linearGradient id="yellowGradientShop" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#FEE887" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#FEE887" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+        </svg>
+
+        {/* Curva amarilla inferior derecha */}
+        <svg
+          className="absolute -right-20 bottom-0 h-[250px] w-[400px] opacity-50 sm:h-[350px] sm:w-[600px]"
+          viewBox="0 0 600 350"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden
+        >
+          <path
+            d="M600 350C500 300 400 250 250 230C100 210 0 150 0 0"
+            stroke="url(#yellowGradient2Shop)"
+            strokeWidth="2.5"
+            fill="none"
+          />
+          <defs>
+            <linearGradient id="yellowGradient2Shop" x1="100%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#FEE887" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#FEE887" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+        </svg>
+
+        {/* Círculo decorativo amarillo inferior */}
+        <div
+          className="absolute -bottom-20 left-1/4 h-[150px] w-[150px] rounded-full border-[2px] border-[#FEE887] opacity-25 sm:h-[200px] sm:w-[200px]"
+          aria-hidden
+        />
+
+        {/* Líneas horizontales decorativas */}
+        <div
+          className="absolute bottom-0 left-0 h-[2px] w-[200px] bg-gradient-to-r from-[#FEE887] to-transparent opacity-40 sm:w-[400px]"
+          aria-hidden
+        />
+        <div
+          className="absolute bottom-10 right-0 h-[2px] w-[250px] bg-gradient-to-l from-[#FEE887] to-transparent opacity-40 sm:bottom-20 sm:w-[500px]"
+          aria-hidden
+        />
+
+        {/* Línea curva amarilla decorativa superior */}
+        <svg
+          className="absolute left-0 top-20 h-[200px] w-[300px] opacity-30 sm:h-[300px] sm:w-[500px]"
+          viewBox="0 0 500 300"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden
+        >
+          <path
+            d="M0 150C100 100 200 50 350 100C450 130 500 180 500 250"
+            stroke="url(#yellowGradient3Shop)"
+            strokeWidth="2"
+            fill="none"
+          />
+          <defs>
+            <linearGradient id="yellowGradient3Shop" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FEE887" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#FEE887" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+        </svg>
+
+        {/* Línea vertical azul izquierda sutil */}
+        <div
+          className="absolute left-0 top-1/3 h-[400px] w-[1px] bg-gradient-to-b from-transparent via-[#5061EC]/30 to-transparent opacity-40"
+          aria-hidden
+        />
+
+        {/* Líneas diagonales sutiles */}
+        <div
+          className="absolute right-1/4 top-0 h-[300px] w-[1px] rotate-12 bg-gradient-to-b from-[#5061EC]/20 via-transparent to-transparent opacity-30"
+          aria-hidden
+        />
+        <div
+          className="absolute left-1/3 bottom-0 h-[250px] w-[1px] -rotate-12 bg-gradient-to-t from-[#FEE887]/20 via-transparent to-transparent opacity-30"
+          aria-hidden
+        />
       </div>
+
+      {/* Header mejorado con UI/UX */}
+      <header className="relative z-50 border-b border-white/5 bg-black/40 backdrop-blur-xl">
+        <div className="flex items-center justify-between px-6 py-4 sm:px-12 lg:px-20">
+          {/* Logo - Solo mundito en móvil, con texto en desktop */}
+          <a href="/inicio" className="flex items-center gap-2">
+            <div className="rounded-full bg-gradient-to-br from-[#5061EC]/20 to-[#5061EC]/5 p-1 transition-all duration-300 hover:scale-110 hover:from-[#5061EC]/30 hover:to-[#5061EC]/10">
+              <Image
+                src="/images/LogoSwagly.png"
+                alt="Swagly Logo"
+                width={40}
+                height={40}
+                className="h-8 w-8 sm:h-10 sm:w-10"
+              />
+            </div>
+            {/* Texto del logo - Oculto en móvil */}
+            <Image
+              src="/images/TextoLogoSwagly.png"
+              alt="Swagly"
+              width={100}
+              height={30}
+              className="hidden h-auto w-20 sm:block lg:w-24"
+            />
+          </a>
+
+          {/* Navegación Desktop - Oculta en móvil */}
+          <nav className="hidden items-center gap-4 md:flex lg:gap-6">
+            <a
+              href="/inicio"
+              className="group relative px-3 py-2 text-sm font-medium transition-all duration-300 hover:text-[#FEE887]"
+            >
+              <span className="relative z-10">Inicio</span>
+              <div className="absolute inset-0 rounded-lg bg-[#FEE887]/0 transition-all duration-300 group-hover:bg-[#FEE887]/10" />
+            </a>
+            <a
+              href="/shop"
+              className="group relative px-3 py-2 text-sm font-medium text-[#FEE887]"
+            >
+              <span className="relative z-10">Tienda</span>
+              <div className="absolute inset-0 rounded-lg bg-[#FEE887]/10" />
+            </a>
+            <a
+              href="/events"
+              className="group relative px-3 py-2 text-sm font-medium transition-all duration-300 hover:text-[#FEE887]"
+            >
+              <span className="relative z-10">Tus eventos</span>
+              <div className="absolute inset-0 rounded-lg bg-[#FEE887]/0 transition-all duration-300 group-hover:bg-[#FEE887]/10" />
+            </a>
+
+            {/* Balance amarillo */}
+            <TokenBalance />
+
+            {/* Icono de perfil azul - Link a perfil */}
+            <a
+              href="/profile"
+              className="group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-[#5061EC]/40 bg-gradient-to-br from-[#5061EC]/20 to-[#5061EC]/5 shadow-lg shadow-[#5061EC]/20 backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:border-[#5061EC]/60 hover:shadow-[#5061EC]/40"
+            >
+              <svg
+                className="h-5 w-5 text-[#5061EC] transition-colors group-hover:text-[#5061EC]"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </a>
+          </nav>
+
+          {/* Navegación Móvil - Visible solo en móvil */}
+          <div className="flex items-center gap-3 md:hidden">
+            {/* Balance amarillo */}
+            <TokenBalance />
+
+            {/* Icono de perfil azul */}
+            <a
+              href="/profile"
+              className="group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-[#5061EC]/40 bg-gradient-to-br from-[#5061EC]/20 to-[#5061EC]/5 shadow-lg shadow-[#5061EC]/20 backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:border-[#5061EC]/60 hover:shadow-[#5061EC]/40"
+            >
+              <svg
+                className="h-5 w-5 text-[#5061EC] transition-colors group-hover:text-[#5061EC]"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </a>
+
+            {/* Hamburger Menu Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="relative flex h-10 w-10 items-center justify-center rounded-lg bg-[#5061EC]/20 text-white transition-all duration-300 hover:bg-[#5061EC]/30"
+              aria-label="Toggle menu"
+            >
+              {isMobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Menu Dropdown */}
+        {isMobileMenuOpen && (
+          <div className="border-t border-white/5 bg-black/95 backdrop-blur-xl md:hidden">
+            <nav className="space-y-1 px-4 py-4">
+              <a
+                href="/inicio"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block rounded-lg px-4 py-3 text-sm font-medium text-white transition-all duration-300 hover:bg-[#FEE887]/10 hover:text-[#FEE887]"
+              >
+                Inicio
+              </a>
+              <a
+                href="/shop"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block rounded-lg px-4 py-3 text-sm font-medium text-[#FEE887] bg-[#FEE887]/10"
+              >
+                Tienda
+              </a>
+              <a
+                href="/events"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block rounded-lg px-4 py-3 text-sm font-medium text-white transition-all duration-300 hover:bg-[#FEE887]/10 hover:text-[#FEE887]"
+              >
+                Tus eventos
+              </a>
+            </nav>
+          </div>
+        )}
+      </header>
 
       {/* Content */}
-      <div className="relative z-10 mx-auto max-w-6xl px-4 py-4 sm:py-6">
-        {/* Header con balance */}
-        <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-cyan-500/40 bg-cyan-500/10 sm:h-10 sm:w-10">
-              <ShoppingBag className="h-4 w-4 text-cyan-400 sm:h-5 sm:w-5" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white sm:text-2xl">Tienda SWAG</h1>
-              <p className="text-xs text-cyan-200/70 sm:text-sm">Canjea tus tokens por merch exclusiva</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Badge
-              variant="outline"
-              className="inline-flex items-center gap-1.5 border-cyan-500/40 bg-cyan-500/10 px-3 py-2 text-cyan-100"
-            >
-              <span className="text-sm font-bold sm:text-base">
-                {balance.toFixed(1)} SWAG
+      <section className="relative z-10 px-6 py-8 sm:px-12 lg:px-20">
+        <div className="mx-auto max-w-7xl">
+          {/* Title con animación */}
+          <div className="mb-12 text-center">
+            <h1 className="mb-3 text-4xl font-bold sm:text-5xl lg:text-6xl">
+              <span className="bg-gradient-to-r from-[#FEE887] via-white to-[#FEE887] bg-clip-text text-transparent animate-pulse">
+                Tienda
               </span>
-            </Badge>
-            <ConnectButton />
+            </h1>
+            <p className="text-lg text-white/80 sm:text-xl">Cambia tus tokens SWAG por merch exclusiva</p>
           </div>
-        </div>
 
-        {/* Grid de productos - 2 columnas en mobile, adaptable en desktop */}
-        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
-          {products.map((product) => {
-            const enoughBalance = hasEnoughBalance(product.price)
+          {/* Products Grid - Mostrando todos los productos */}
+          <div className="mb-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {products.map((product) => {
+              const enoughBalance = hasEnoughBalance(product.price)
 
-            return (
-              <Card
-                key={product.id}
-                className="group overflow-hidden border-cyan-500/20 bg-black/40 backdrop-blur-xl transition-all hover:border-cyan-500/40 hover:shadow-lg hover:shadow-cyan-500/10"
-              >
-                <CardHeader className="space-y-1 pb-4">
-                  <CardTitle className="text-lg text-white sm:text-xl">{product.name}</CardTitle>
-                  <CardDescription className="text-sm text-cyan-200/70">
-                    {product.description}
-                  </CardDescription>
-                </CardHeader>
-
-                <CardContent className="space-y-4">
-                  {/* Imagen/Icono del producto */}
-                  <div className="relative flex aspect-square items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 p-6 transition-all group-hover:from-cyan-500/15 group-hover:to-cyan-600/10">
-                    <div className="text-cyan-400 transition-transform group-hover:scale-110">
-                      {product.icon}
-                    </div>
-
-                    {/* Badge de precio */}
-                    <Badge
-                      className="absolute right-3 top-3 border-cyan-500/40 bg-cyan-500/20 text-cyan-100 backdrop-blur-sm"
-                    >
-                      {product.price} SWAG
-                    </Badge>
-                  </div>
-
-                  {/* Botón de compra */}
-                  <div className="space-y-2">
-                    {!enoughBalance && (
-                      <div className="flex items-center gap-2 rounded-lg bg-red-500/10 p-2 text-xs text-red-200">
-                        <AlertCircle className="h-4 w-4" />
-                        <span>Balance insuficiente</span>
+              return (
+                <div
+                  key={product.id}
+                  className="group overflow-hidden rounded-3xl bg-gradient-to-br from-[#FEE887] to-[#FFFACD] p-6 transition-all hover:scale-105 hover:shadow-2xl hover:shadow-[#FEE887]/30"
+                >
+                  {/* Product Image */}
+                  <div className="relative mb-4 aspect-square overflow-hidden rounded-2xl bg-[#5061EC]">
+                    {product.imageUrl ? (
+                      <Image
+                        src={product.imageUrl}
+                        alt={product.title}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center">
+                        <span className="text-6xl">👕</span>
                       </div>
                     )}
-
-                    <Button
-                      size="lg"
-                      className="w-full border border-cyan-500/60 bg-cyan-500/20 text-cyan-100 transition-all hover:bg-cyan-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                      onClick={() => handleBuyClick(product)}
-                      disabled={!product.available || !enoughBalance}
-                    >
-                      {!product.available ? (
-                        'Agotado'
-                      ) : !enoughBalance ? (
-                        'Balance Insuficiente'
-                      ) : (
-                        <>
-                          <ShoppingBag className="mr-2 h-4 w-4" />
-                          Adquirir
-                        </>
-                      )}
-                    </Button>
                   </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
 
-        {/* Mensaje informativo */}
-        <Card className="mt-6 border-cyan-500/20 bg-cyan-500/5 backdrop-blur-xl sm:mt-8">
-          <CardContent className="flex items-start gap-3 p-4">
-            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-cyan-400" />
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-cyan-100">Información importante</p>
-              <p className="text-xs text-cyan-200/70 sm:text-sm">
-                Los tokens SWAG se transferirán de tu wallet al realizar la compra. Asegúrate de tener
-                suficiente balance y gas para la transacción en Scroll Sepolia.
-              </p>
+                  {/* Product Info */}
+                  <h3 className="mb-2 text-lg font-bold text-black">{product.title}</h3>
+                  <p className="mb-4 text-base font-bold text-black">
+                    COSTO: {product.price} SWAG
+                  </p>
+
+                  {/* Buy Button */}
+                  <Button
+                    onClick={() => handleBuyClick(product)}
+                    disabled={!product.isAvailable || !enoughBalance}
+                    className="w-full rounded-full bg-black text-white hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {!product.isAvailable ? 'Agotado' : !enoughBalance ? 'Balance Insuficiente' : 'Comprar'}
+                  </Button>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Purchases Section con UI/UX mejorado */}
+          <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#FEE887] to-[#FFFACD] p-8 shadow-2xl shadow-[#FEE887]/20 transition-all duration-300 hover:shadow-[#FEE887]/40 sm:p-12">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+            <div className="relative z-10">
+              <h2 className="mb-8 text-center text-3xl font-bold text-black sm:text-4xl">
+                Tus Compras
+              </h2>
+
+              {loadingPurchases ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <Loader2 className="h-12 w-12 animate-spin text-black" />
+                  <p className="mt-4 text-black/70">Cargando tus compras...</p>
+                </div>
+              ) : purchases.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-3xl bg-white/60 p-12 text-center backdrop-blur-sm">
+                  <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-black/10">
+                    <span className="text-5xl">🛍️</span>
+                  </div>
+                  <h3 className="mb-3 text-2xl font-bold text-black">¡Aún no tienes compras!</h3>
+                  <p className="max-w-md text-lg text-black/70">
+                    Explora nuestra tienda y canjea tus tokens SWAG por merch exclusiva.
+                    <br />
+                    <span className="font-semibold text-black">¡Comienza tu colección ahora!</span>
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {purchases.map((purchase) => (
+                    <div
+                      key={purchase.id}
+                      className="group/card relative overflow-hidden rounded-2xl bg-white/60 p-6 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:bg-white/80 hover:shadow-xl"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#5061EC]/5 to-transparent opacity-0 transition-opacity duration-300 group-hover/card:opacity-100" />
+
+                      <div className="relative z-10">
+                        <h4 className="mb-3 text-lg font-bold text-black">{purchase.productTitle}</h4>
+                        <div className="mb-3 flex items-center gap-2">
+                          <div className="rounded-full bg-black/10 px-3 py-1">
+                            <p className="text-sm font-bold text-black">{purchase.price} SWAG</p>
+                          </div>
+                        </div>
+                        {purchase.txHash && (
+                          <a
+                            href={`https://sepolia.scrollscan.com/tx/${purchase.txHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-sm font-medium text-[#5061EC] transition-colors hover:text-[#5061EC]/80 hover:underline"
+                          >
+                            Ver transacción
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </div>
+      </section>
 
-      {/* Diálogo de confirmación */}
+      {/* Purchase Dialog */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent className="border-cyan-500/20 bg-black/95 backdrop-blur-xl">
+        <DialogContent className="border-[#5061EC]/30 bg-black/95 text-white backdrop-blur-xl">
           <DialogHeader>
             <DialogTitle className="text-white">
               {purchaseStatus.type ? 'Resultado de la compra' : 'Confirmar compra'}
             </DialogTitle>
-            <DialogDescription className="text-cyan-200/70">
-              {purchaseStatus.type ? '' : 'Estás a punto de adquirir este producto'}
-            </DialogDescription>
           </DialogHeader>
 
-          {/* Estado de la compra */}
+          {isPending && (
+            <div className="flex flex-col items-center gap-4 py-4">
+              <div className="rounded-full bg-yellow-500/20 p-3">
+                <Loader2 className="h-12 w-12 animate-spin text-yellow-400" />
+              </div>
+              <p className="text-center text-sm text-yellow-200">
+                Esperando confirmación en tu wallet...
+              </p>
+            </div>
+          )}
+
+          {isConfirming && (
+            <div className="flex flex-col items-center gap-4 py-4">
+              <div className="rounded-full bg-blue-500/20 p-3">
+                <Loader2 className="h-12 w-12 animate-spin text-blue-400" />
+              </div>
+              <p className="text-center text-sm text-blue-200">
+                Procesando transacción...
+              </p>
+              {hash && (
+                <a
+                  href={`https://sepolia.scrollscan.com/tx/${hash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-400 underline"
+                >
+                  Ver en el explorador →
+                </a>
+              )}
+            </div>
+          )}
+
           {purchaseStatus.type === 'success' && (
             <div className="flex flex-col items-center gap-4 py-4">
               <div className="rounded-full bg-green-500/20 p-3">
@@ -308,38 +630,32 @@ export default function ShopPage() {
             </div>
           )}
 
-          {/* Detalles del producto antes de confirmar */}
-          {!purchaseStatus.type && selectedProduct && (
+          {!purchaseStatus.type && !isPending && !isConfirming && selectedProduct && (
             <div className="space-y-4 py-4">
-              <div className="flex items-center justify-between rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-4">
-                <div>
-                  <p className="text-sm font-medium text-white">{selectedProduct.name}</p>
-                  <p className="text-xs text-cyan-200/70">Precio</p>
+              <div className="rounded-lg bg-[#5061EC]/10 p-4">
+                <p className="mb-2 font-medium text-white">{selectedProduct.title}</p>
+                <p className="text-2xl font-bold text-[#FEE887]">{selectedProduct.price} SWAG</p>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-white/70">Balance actual</span>
+                  <span className="font-medium text-white">{balance.toFixed(1)} SWAG</span>
                 </div>
-                <Badge className="border-cyan-500/40 bg-cyan-500/20 text-cyan-100">
-                  {selectedProduct.price} SWAG
-                </Badge>
-              </div>
-
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-cyan-200/70">Balance actual</span>
-                <span className="font-medium text-white">{balance.toFixed(1)} SWAG</span>
-              </div>
-
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-cyan-200/70">Balance después</span>
-                <span className="font-medium text-white">
-                  {(balance - selectedProduct.price).toFixed(1)} SWAG
-                </span>
+                <div className="flex justify-between">
+                  <span className="text-white/70">Balance después</span>
+                  <span className="font-medium text-white">
+                    {(balance - selectedProduct.price).toFixed(1)} SWAG
+                  </span>
+                </div>
               </div>
             </div>
           )}
 
           <DialogFooter>
-            {purchaseStatus.type ? (
+            {purchaseStatus.type || isConfirmed ? (
               <Button
                 onClick={handleCloseDialog}
-                className="w-full border border-cyan-500/60 bg-cyan-500/20 text-cyan-100 hover:bg-cyan-500/30"
+                className="w-full rounded-full bg-[#FEE887] text-black hover:bg-[#FFFACD]"
               >
                 Cerrar
               </Button>
@@ -348,20 +664,20 @@ export default function ShopPage() {
                 <Button
                   variant="outline"
                   onClick={handleCloseDialog}
-                  disabled={isPurchasing}
-                  className="border-cyan-500/40 text-cyan-100 hover:bg-cyan-500/10"
+                  disabled={isPending || isConfirming}
+                  className="border-white/20 text-white hover:bg-white/10"
                 >
                   Cancelar
                 </Button>
                 <Button
                   onClick={handleConfirmPurchase}
-                  disabled={isPurchasing}
-                  className="border border-cyan-500/60 bg-cyan-500/20 text-cyan-100 hover:bg-cyan-500/30"
+                  disabled={isPending || isConfirming}
+                  className="rounded-full bg-[#FEE887] text-black hover:bg-[#FFFACD]"
                 >
-                  {isPurchasing ? (
+                  {isPending || isConfirming ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Procesando...
+                      {isPending ? 'Esperando...' : 'Confirmando...'}
                     </>
                   ) : (
                     'Confirmar compra'
@@ -372,9 +688,6 @@ export default function ShopPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Bottom Navigation */}
-      <BottomNavigation />
     </main>
   )
 }

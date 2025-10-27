@@ -19,19 +19,19 @@ export function TokenBalance({ className = '' }: TokenBalanceProps) {
   return (
     <Badge
       variant="outline"
-      className={`inline-flex items-center gap-1.5 border-cyan-500/40 bg-cyan-500/10 px-3 py-1.5 text-cyan-100 ${className}`}
+      className={`inline-flex items-center gap-1.5 border-[#FEE887]/40 bg-[#FEE887]/10 px-3 py-1.5 text-[#FEE887] ${className}`}
     >
       {isLoading ? (
         <>
-          <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
-          <span className="text-sm font-bold sm:text-base">
+          <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4 text-[#FEE887]" />
+          <span className="text-sm font-bold sm:text-base text-[#FEE887]">
             Cargando...
           </span>
         </>
       ) : (
         <>
-          <Wallet className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          <span className="text-sm font-bold sm:text-base">
+          <Wallet className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#FEE887]" />
+          <span className="text-sm font-bold sm:text-base text-[#FEE887]">
             {balance.toFixed(1)} SWAG
           </span>
         </>

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { BarChart3, Calendar, Users, Zap, Building2 } from "lucide-react"
+import { BarChart3, Calendar, Users, Zap, Building2, ShoppingBag, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -221,6 +221,46 @@ export default function AdminDashboard() {
                 className="w-full bg-cyan-500 text-black shadow-[0_0_24px_rgba(0,240,255,0.35)] hover:bg-cyan-400"
               >
                 <Link href="/admin/activities">Gestionar actividades</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className={minimalCard}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg text-white">
+                <ShoppingBag className="h-5 w-5 text-cyan-300" />
+                Tienda SWAG
+              </CardTitle>
+              <CardDescription className="text-sm text-cyan-200/80">
+                Administra productos de la tienda.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 pt-0">
+              <Button
+                asChild
+                className="w-full bg-cyan-500 text-black shadow-[0_0_24px_rgba(0,240,255,0.35)] hover:bg-cyan-400"
+              >
+                <Link href="/admin/products">Gestionar productos</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className={minimalCard}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg text-white">
+                <ShoppingCart className="h-5 w-5 text-cyan-300" />
+                Compras SWAG
+              </CardTitle>
+              <CardDescription className="text-sm text-cyan-200/80">
+                Visualiza todas las transacciones.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 pt-0">
+              <Button
+                asChild
+                className="w-full bg-cyan-500 text-black shadow-[0_0_24px_rgba(0,240,255,0.35)] hover:bg-cyan-400"
+              >
+                <Link href="/admin/purchases">Ver compras</Link>
               </Button>
             </CardContent>
           </Card>

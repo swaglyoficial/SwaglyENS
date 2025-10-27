@@ -16,7 +16,9 @@
       "Bash(npx shadcn@latest add:*)",
       "Bash(npm run build:*)",
       "Bash(mkdir:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "WebSearch",
+      "WebFetch(domain:0x.org)"
     ],
     "deny": [],
     "ask": []

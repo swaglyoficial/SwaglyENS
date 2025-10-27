@@ -13,9 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Loader2, Sparkles } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import Image from 'next/image'
+import { Loader2, Plus } from 'lucide-react'
 
 /**
  * Tipos de datos
@@ -29,9 +29,8 @@ interface Event {
 }
 
 /**
- * Página de onboarding
- * Pide al usuario su nickname y que seleccione el evento al que asiste
- * Valida que el evento existe en la BD y crea el pasaporte digital
+ * Página de onboarding rediseñada
+ * Muestra cómo usar Swagly con pasos visuales
  */
 export default function OnboardingPage() {
   const router = useRouter()
@@ -41,6 +40,7 @@ export default function OnboardingPage() {
   const [nickname, setNickname] = useState('')
   const [selectedEventId, setSelectedEventId] = useState('')
   const [events, setEvents] = useState<Event[]>([])
+  const [showDialog, setShowDialog] = useState(false)
 
   // Estados de carga y error
   const [isLoading, setIsLoading] = useState(false)
@@ -82,10 +82,9 @@ export default function OnboardingPage() {
             // Si el usuario existe, pre-cargar su nickname y marcarlo como existente
             if (userData.user && userData.user.nickname) {
               setNickname(userData.user.nickname)
-              setHasExistingNickname(true) // Marcar que ya tiene un apodo registrado
+              setHasExistingNickname(true)
             }
           }
-          // Si el usuario no existe (404), el nickname permanece vacío
         }
       } catch (err) {
         setError('Error al conectar con el servidor')
@@ -101,14 +100,13 @@ export default function OnboardingPage() {
 
   /**
    * Maneja el envío del formulario
-   * Crea el usuario con nickname y el pasaporte para el evento seleccionado
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
     // Validar campos
-    if (!nickname.trim()) {
+    if (!nickname.trim() && !hasExistingNickname) {
       setError('Por favor ingresa tu apodo')
       return
     }
@@ -171,66 +169,186 @@ export default function OnboardingPage() {
   if (!isConnected || isLoadingEvents) {
     return (
       <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black text-foreground">
-        <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#5061EC]" />
       </main>
     )
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black text-foreground p-4 sm:p-6">
-      {/* Background effects - optimizados para móviles */}
+    <main className="relative min-h-screen overflow-hidden bg-black text-white">
+      {/* Background decorativo */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="neon-grid absolute inset-0 opacity-10 sm:opacity-20" aria-hidden />
-        <div className="absolute -left-10 top-20 h-48 w-48 rounded-full bg-cyan-400/20 blur-[100px] sm:-left-20 sm:top-32 sm:h-64 sm:w-64 sm:blur-[120px]" aria-hidden />
-        <div className="absolute -right-10 top-10 h-56 w-56 rounded-full bg-cyan-500/15 blur-[100px] sm:right-[-12%] sm:top-6 sm:h-72 sm:w-72 sm:blur-[120px]" aria-hidden />
+        <div className="neon-grid absolute inset-0 opacity-5" aria-hidden />
+        <div
+          className="absolute right-0 top-0 h-[600px] w-1 bg-gradient-to-b from-[#5061EC] via-transparent to-transparent opacity-30"
+          aria-hidden
+        />
       </div>
 
-      {/* Form Card - responsive */}
-      <Card className="relative z-10 w-full max-w-md border-cyan-500/20 bg-black/40 backdrop-blur-xl">
-        <CardHeader className="p-4 text-center sm:p-6">
-          <div className="mb-3 flex justify-center sm:mb-4">
-            <Badge className="inline-flex items-center gap-1.5 border border-cyan-500/40 bg-cyan-500/10 text-cyan-100 text-xs sm:gap-2 sm:text-sm">
-              <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-              Bienvenido a Swagly
-            </Badge>
-          </div>
-          <CardTitle className="text-xl text-white sm:text-2xl">
-            {hasExistingNickname ? 'Selecciona un evento' : 'Completa tu perfil'}
-          </CardTitle>
-          <CardDescription className="text-sm text-cyan-200/70 sm:text-base">
-            {hasExistingNickname
-              ? 'Selecciona el evento al que quieres asistir'
-              : 'Ingresa tu apodo y selecciona el evento al que asistes'}
-          </CardDescription>
-        </CardHeader>
+      {/* Header */}
+      <header className="relative z-10 flex items-center justify-between px-6 py-6 sm:px-12 lg:px-20">
+        <div className="flex items-center gap-2">
+          <Image
+            src="/images/LogoSwagly.png"
+            alt="Swagly Logo"
+            width={40}
+            height={40}
+            className="h-10 w-10"
+          />
+          <Image
+            src="/images/TextoLogoSwagly.png"
+            alt="Swagly"
+            width={100}
+            height={30}
+            className="h-auto w-20 sm:w-24"
+          />
+        </div>
+        <nav className="flex items-center gap-4 sm:gap-8">
+          <a href="/shop" className="text-sm font-medium hover:text-[#FEE887] transition-colors">
+            Tienda
+          </a>
+          <a href="/dashboard" className="text-sm font-medium hover:text-[#FEE887] transition-colors">
+            Tus eventos
+          </a>
+        </nav>
+      </header>
 
-        <CardContent className="p-4 sm:p-6">
-          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-            {/* Nickname Input */}
-            <div className="space-y-2">
-              <Label htmlFor="nickname" className="text-sm text-cyan-100 sm:text-base">
-                Apodo
-              </Label>
-              <Input
-                id="nickname"
-                type="text"
-                placeholder="Tu apodo único"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                className="border-cyan-500/30 bg-black/50 text-white placeholder:text-cyan-200/40 focus:border-cyan-500/60 text-sm sm:text-base disabled:opacity-60 disabled:cursor-not-allowed"
-                disabled={isLoading || hasExistingNickname}
-                readOnly={hasExistingNickname}
-              />
-              {hasExistingNickname && (
-                <p className="text-xs text-cyan-300/70 sm:text-sm">
-                  Tu apodo ya está registrado. Solo selecciona el evento.
-                </p>
-              )}
+      {/* Content */}
+      <section className="relative z-10 px-6 py-12 sm:px-12 lg:px-20">
+        <div className="mx-auto max-w-6xl">
+          {/* Title */}
+          <div className="mb-12 text-center">
+            <h1 className="mb-4 text-3xl font-bold sm:text-4xl">¿Cómo usar Swagly?</h1>
+          </div>
+
+          {/* Steps Flow - Visual con círculos conectados */}
+          <div className="relative mb-16">
+            {/* Línea conectora - oculta en móvil */}
+            <div className="absolute left-0 right-0 top-1/3 hidden h-0.5 bg-gradient-to-r from-transparent via-white/20 to-transparent lg:block" />
+
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
+              {/* Step 1 */}
+              <div className="relative flex flex-col items-center text-center">
+                <div className="relative mb-4 flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-[#5061EC]/20 to-[#5061EC]/5 border-4 border-[#5061EC]/30">
+                  <div className="h-24 w-24 overflow-hidden rounded-full">
+                    <Image
+                      src="/images/step-1.jpg"
+                      alt="Paso 1"
+                      width={96}
+                      height={96}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="absolute -bottom-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#5061EC] text-sm font-bold">
+                    1
+                  </div>
+                </div>
+                <h3 className="mb-2 text-lg font-bold">Recibe tu pasaporte físico y escanealo</h3>
+              </div>
+
+              {/* Step 2 */}
+              <div className="relative flex flex-col items-center text-center">
+                <div className="relative mb-4 flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-[#FEE887]/20 to-[#FEE887]/5 border-4 border-[#FEE887]/30">
+                  <div className="h-24 w-24 overflow-hidden rounded-full">
+                    <Image
+                      src="/images/step-2.jpg"
+                      alt="Paso 2"
+                      width={96}
+                      height={96}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="absolute -bottom-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#FEE887] text-sm font-bold text-black">
+                    2
+                  </div>
+                </div>
+                <h3 className="mb-2 text-lg font-bold">Realiza las actividades del pasaporte y gana tokens</h3>
+              </div>
+
+              {/* Step 3 */}
+              <div className="relative flex flex-col items-center text-center">
+                <div className="relative mb-4 flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-[#5061EC]/20 to-[#5061EC]/5 border-4 border-[#5061EC]/30">
+                  <div className="h-24 w-24 overflow-hidden rounded-full">
+                    <Image
+                      src="/images/step-3.jpg"
+                      alt="Paso 3"
+                      width={96}
+                      height={96}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="absolute -bottom-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#5061EC] text-sm font-bold">
+                    3
+                  </div>
+                </div>
+                <h3 className="mb-2 text-lg font-bold">Cambia tus tokens por merch única en nuestra tienda</h3>
+              </div>
+
+              {/* Step 4 */}
+              <div className="relative flex flex-col items-center text-center">
+                <div className="relative mb-4 flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-[#FEE887]/20 to-[#FEE887]/5 border-4 border-[#FEE887]/30">
+                  <div className="h-24 w-24 overflow-hidden rounded-full">
+                    <Image
+                      src="/images/step-4.jpg"
+                      alt="Paso 4"
+                      width={96}
+                      height={96}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="absolute -bottom-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#FEE887] text-sm font-bold text-black">
+                    4
+                  </div>
+                </div>
+                <h3 className="mb-2 text-lg font-bold">Recibe tu merch en nuestro stand</h3>
+              </div>
             </div>
+          </div>
+
+          {/* CTA Button */}
+          <div className="flex justify-center">
+            <Button
+              onClick={() => setShowDialog(true)}
+              className="rounded-full bg-[#FEE887] px-8 py-6 text-base font-bold text-black hover:bg-[#FFFACD] shadow-lg"
+            >
+              <Plus className="mr-2 h-5 w-5" />
+              Agregar pasaporte
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Dialog para agregar pasaporte */}
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="border-[#5061EC]/30 bg-black/95 text-white backdrop-blur-xl sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">
+              {hasExistingNickname ? 'Selecciona un evento' : 'Completa tu perfil'}
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Nickname Input */}
+            {!hasExistingNickname && (
+              <div className="space-y-2">
+                <Label htmlFor="nickname" className="text-sm text-white">
+                  Apodo
+                </Label>
+                <Input
+                  id="nickname"
+                  type="text"
+                  placeholder="Tu apodo único"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  className="border-[#5061EC]/30 bg-black/50 text-white placeholder:text-white/40"
+                  disabled={isLoading}
+                />
+              </div>
+            )}
 
             {/* Event Select */}
             <div className="space-y-2">
-              <Label htmlFor="event" className="text-sm text-cyan-100 sm:text-base">
+              <Label htmlFor="event" className="text-sm text-white">
                 Evento
               </Label>
               <Select
@@ -238,15 +356,15 @@ export default function OnboardingPage() {
                 onValueChange={setSelectedEventId}
                 disabled={isLoading}
               >
-                <SelectTrigger className="border-cyan-500/30 bg-black/50 text-white focus:border-cyan-500/60 text-sm sm:text-base">
+                <SelectTrigger className="border-[#5061EC]/30 bg-black/50 text-white">
                   <SelectValue placeholder="Selecciona un evento" />
                 </SelectTrigger>
-                <SelectContent className="border-cyan-500/20 bg-black/95 text-white backdrop-blur-xl">
+                <SelectContent className="border-[#5061EC]/20 bg-black/95 text-white backdrop-blur-xl">
                   {events.map((event) => (
                     <SelectItem
                       key={event.id}
                       value={event.id}
-                      className="focus:bg-cyan-500/20 focus:text-cyan-100 text-sm sm:text-base"
+                      className="focus:bg-[#5061EC]/20 focus:text-white"
                     >
                       {event.name}
                     </SelectItem>
@@ -257,7 +375,7 @@ export default function OnboardingPage() {
 
             {/* Error Message */}
             {error && (
-              <div className="rounded-lg border border-red-500/50 bg-red-500/10 p-3 text-xs text-red-200 sm:text-sm">
+              <div className="rounded-lg border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-200">
                 {error}
               </div>
             )}
@@ -265,8 +383,7 @@ export default function OnboardingPage() {
             {/* Submit Button */}
             <Button
               type="submit"
-              size="lg"
-              className="w-full border border-cyan-500/60 bg-cyan-500/20 text-cyan-100 hover:bg-cyan-500/30 text-sm sm:text-base"
+              className="w-full rounded-full bg-[#FEE887] py-6 text-base font-bold text-black hover:bg-[#FFFACD]"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -275,12 +392,12 @@ export default function OnboardingPage() {
                   Creando pasaporte...
                 </>
               ) : (
-                'Continuar al Dashboard'
+                'Agregar pasaporte'
               )}
             </Button>
           </form>
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }

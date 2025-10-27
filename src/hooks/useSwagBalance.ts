@@ -4,10 +4,13 @@ import { formatUnits } from 'viem'
 /**
  * Hook para obtener el balance de tokens SWAG del usuario conectado
  * Lee el balance del contrato ERC20 en Scroll Sepolia
+ *
+ * IMPORTANTE: No especificamos chainId para que wagmi use automáticamente
+ * la red conectada del usuario. Esto evita conflictos con el formato CAIP-2
+ * que usa Reown AppKit.
  */
 
 const SWAG_TOKEN_ADDRESS = '0x05668BC3Fb05c2894988142a0b730149122192eB' as const
-const SCROLL_SEPOLIA_CHAIN_ID = 534351
 
 // ABI simplificado para balanceOf
 const ERC20_ABI = [
@@ -28,7 +31,7 @@ export function useSwagBalance() {
     abi: ERC20_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
-    chainId: SCROLL_SEPOLIA_CHAIN_ID,
+    // No especificamos chainId - wagmi usa automáticamente la red conectada
     query: {
       enabled: !!address, // Solo ejecutar si hay una dirección conectada
       refetchInterval: 10000, // Refrescar cada 10 segundos

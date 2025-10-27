@@ -40,6 +40,7 @@ interface ScanMerchDialogProps {
   walletAddress: string   // Wallet address del usuario (donde se envían los tokens)
   eventId: string         // ID del evento actual
   onScanSuccess: () => void  // Callback cuando el scan es exitoso
+  refetchBalance?: () => void  // Función opcional para actualizar el balance de tokens
 }
 
 export function ScanMerchDialog({
@@ -47,6 +48,7 @@ export function ScanMerchDialog({
   walletAddress,
   eventId,
   onScanSuccess,
+  refetchBalance,
 }: ScanMerchDialogProps) {
   // ========================================
   // ESTADOS DEL COMPONENTE
@@ -144,6 +146,11 @@ export function ScanMerchDialog({
       setSuccess(true)
       setTransactionHash(scanData.scanData?.transactionHash || '')
 
+      // Actualizar balance de tokens inmediatamente si la función está disponible
+      if (refetchBalance) {
+        refetchBalance()
+      }
+
       // Esperar 2.5 segundos para que el usuario vea el mensaje de éxito
       setTimeout(() => {
         setOpen(false)        // Cerrar diálogo
@@ -186,25 +193,25 @@ export function ScanMerchDialog({
   // ========================================
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {/* Botón que abre el diálogo - responsivo */}
+      {/* Botón que abre el diálogo - Estilo amarillo como en la imagen */}
       <DialogTrigger asChild>
         <Button
-          className="w-full border border-cyan-500/60 bg-cyan-500/20 text-cyan-100 hover:bg-cyan-500/30 text-sm sm:text-base"
+          className="w-full rounded-full bg-gradient-to-r from-[#FEE887] to-[#FFFACD] text-black font-bold text-base shadow-2xl shadow-[#FEE887]/40 transition-all duration-300 hover:scale-105 hover:shadow-[#FEE887]/60 sm:text-lg"
           size="lg"
         >
-          <Scan className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-          Escanear Merch
+          <Scan className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+          Escanear
         </Button>
       </DialogTrigger>
 
-      {/* Contenido del diálogo - optimizado para móviles */}
-      <DialogContent className="border-cyan-500/20 bg-black/95 text-white backdrop-blur-xl w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto">
+      {/* Contenido del diálogo - optimizado para móviles con colores Swagly */}
+      <DialogContent className="border-[#5061EC]/30 bg-black/95 text-white backdrop-blur-xl w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="space-y-2">
-          <DialogTitle className="text-xl text-cyan-100 sm:text-2xl">
-            Escanear Merch
+          <DialogTitle className="text-xl text-white sm:text-2xl">
+            Escanear Actividad
           </DialogTitle>
-          <DialogDescription className="text-sm text-cyan-200/70 sm:text-base">
-            Escanea el tag NFC o código QR de la merch para recibir tokens
+          <DialogDescription className="text-sm text-white/70 sm:text-base">
+            Acerca tu dispositivo al tag NFC o escanea el código QR en el stand de la actividad para completarla y recibir tus tokens SWAG.
           </DialogDescription>
         </DialogHeader>
 
@@ -227,16 +234,16 @@ export function ScanMerchDialog({
               ======================================== */}
           {/* Mostrar detalles de la actividad una vez escaneada */}
           {activityInfo && (
-            <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3 sm:p-4">
-              <h4 className="mb-2 text-sm font-semibold text-cyan-100 sm:text-base">
-                Actividad Escaneada:
+            <div className="rounded-lg border border-[#5061EC]/30 bg-gradient-to-br from-[#5061EC]/10 to-[#5061EC]/5 p-3 sm:p-4">
+              <h4 className="mb-2 text-sm font-semibold text-white sm:text-base">
+                ✅ Actividad Escaneada:
               </h4>
-              <p className="text-xs text-cyan-200/80 sm:text-sm">
+              <p className="text-xs text-white/90 sm:text-sm">
                 {activityInfo.name}
               </p>
               <div className="mt-2 flex items-center gap-2 sm:mt-3">
-                <span className="rounded-full border border-yellow-500/40 bg-yellow-500/10 px-2.5 py-0.5 text-xs text-yellow-200 sm:px-3 sm:py-1 sm:text-sm">
-                  {activityInfo.tokens} tokens
+                <span className="rounded-full border border-[#FEE887]/40 bg-[#FEE887]/20 px-2.5 py-0.5 text-xs font-bold text-[#FEE887] sm:px-3 sm:py-1 sm:text-sm">
+                  +{activityInfo.tokens} SWAG
                 </span>
               </div>
             </div>
@@ -266,16 +273,16 @@ export function ScanMerchDialog({
 
           {/* Hash de la transacción (si está disponible) */}
           {transactionHash && (
-            <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-2.5 sm:p-3">
-              <p className="text-[11px] text-cyan-200/60 sm:text-xs">Hash de transacción:</p>
-              <p className="mt-1 break-all font-mono text-[10px] text-cyan-200 sm:text-xs">
+            <div className="rounded-lg border border-[#5061EC]/20 bg-[#5061EC]/5 p-2.5 sm:p-3">
+              <p className="text-[11px] text-white/60 sm:text-xs">Hash de transacción:</p>
+              <p className="mt-1 break-all font-mono text-[10px] text-white/80 sm:text-xs">
                 {transactionHash}
               </p>
               <a
                 href={`https://sepolia.scrollscan.com/tx/${transactionHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 inline-block text-[11px] text-cyan-400 underline hover:text-cyan-300 sm:text-xs"
+                className="mt-2 inline-block text-[11px] text-[#5061EC] underline hover:text-[#5061EC]/80 sm:text-xs"
               >
                 Ver en el explorador de bloques →
               </a>
@@ -303,7 +310,7 @@ export function ScanMerchDialog({
             variant="outline"
             onClick={handleClose}
             disabled={isProcessing}
-            className="w-full border-cyan-500/30 text-cyan-200 hover:bg-cyan-500/10 text-xs sm:w-auto sm:text-sm"
+            className="w-full border-[#5061EC]/30 text-white hover:bg-[#5061EC]/10 text-xs sm:w-auto sm:text-sm"
           >
             {success ? 'Cerrar' : 'Cancelar'}
           </Button>
