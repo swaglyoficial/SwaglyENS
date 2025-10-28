@@ -421,9 +421,9 @@ export default function InicioPage() {
                 </div>
                 <div className="mb-4 space-y-2">
                   <h3 className="mb-2 text-base font-bold transition-colors duration-300 group-hover:text-[#5061EC] sm:text-lg">
-                    Recibe tu pasaporte físico y escanealo
+                    Recibe tu pasaporte
                   </h3>
-                  <p className="text-xs text-white/60 sm:text-sm">Conecta tu wallet al evento</p>
+                  <p className="text-xs text-white/60 sm:text-sm">Obtén tu pasaporte físico al llegar y escanéalo para activar tu experiencia. Puedes hacerlo fácilmente con NFC o código QR.</p>
                 </div>
                 <div className="relative">
                   <div className="absolute -inset-2 animate-pulse rounded-full bg-[#FEE887]/20 blur-xl"></div>
@@ -455,9 +455,9 @@ export default function InicioPage() {
                   </div>
                 </div>
                 <h3 className="mb-2 text-base font-bold transition-colors duration-300 group-hover:text-[#FEE887] sm:text-lg">
-                  Realiza las actividades del pasaporte y gana tokens
+                  Completa actividades y gana tokens
                 </h3>
-                <p className="text-xs text-white/60 sm:text-sm">Completa challenges y acumula SWAG</p>
+                <p className="text-xs text-white/60 sm:text-sm">Acepta los challenges del pasaporte, participa y escanea los puntos NFC o QR al terminar. Cada reto superado te hace ganar tokens SWAG y subir de nivel.</p>
               </div>
 
               {/* Step 3 */}
@@ -477,9 +477,9 @@ export default function InicioPage() {
                   </div>
                 </div>
                 <h3 className="mb-2 text-base font-bold transition-colors duration-300 group-hover:text-[#5061EC] sm:text-lg">
-                  Cambia tus tokens por merch única en nuestra tienda
+                  Cambia tus tokens por merch única
                 </h3>
-                <p className="text-xs text-white/60 sm:text-sm">Canjea por productos exclusivos</p>
+                <p className="text-xs text-white/60 sm:text-sm">Canjea tus tokens SWAG por productos exclusivos en nuestra tienda. Descubre piezas limitadas, coleccionables y llena tu estilo de swag.</p>
               </div>
 
               {/* Step 4 */}
@@ -499,9 +499,9 @@ export default function InicioPage() {
                   </div>
                 </div>
                 <h3 className="mb-2 text-base font-bold transition-colors duration-300 group-hover:text-[#FEE887] sm:text-lg">
-                  Recibe tu merch en nuestro stand
+                  Canjea tu merch
                 </h3>
-                <p className="text-xs text-white/60 sm:text-sm">Disfruta de tu recompensa</p>
+                <p className="text-xs text-white/60 sm:text-sm">Pasa por nuestro stand o con el sponsor de la actividad para reclamar tu recompensa. Disfruta de tu merch exclusiva y muestra tu swag al mundo.</p>
               </div>
             </div>
           </div>

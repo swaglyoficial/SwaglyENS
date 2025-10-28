@@ -18,7 +18,9 @@
       "Bash(mkdir:*)",
       "Bash(cp:*)",
       "WebSearch",
-      "WebFetch(domain:0x.org)"
+      "WebFetch(domain:0x.org)",
+      "WebFetch(domain:pagespeed.web.dev)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

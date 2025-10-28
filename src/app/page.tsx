@@ -161,6 +161,8 @@ export default function Home() {
             width={40}
             height={40}
             className="h-8 w-8 sm:h-10 sm:w-10"
+            priority
+            sizes="(max-width: 640px) 32px, 40px"
           />
           <Image
             src="/images/TextoLogoSwagly.png"
@@ -168,6 +170,8 @@ export default function Home() {
             width={100}
             height={30}
             className="h-auto w-16 sm:w-20 lg:w-24"
+            priority
+            sizes="(max-width: 640px) 64px, (max-width: 1024px) 80px, 96px"
           />
         </div>
       </header>
@@ -184,7 +188,7 @@ export default function Home() {
                 <span className="text-white">merch épica.</span>
               </h1>
               <p className="mx-auto max-w-xl text-sm text-white/80 sm:text-base lg:text-lg lg:mx-0 lg:max-w-md">
-                Crea tu cuenta y distribuciones tu pasaporte digital para recolectar experiencias, NFTs y merch única dentro del evento.
+                Conecta tu wallet o crea tu cuenta y empieza la aventura. Explora eventos crypto, completa misiones y gana merch legendaria solo por participar.
               </p>
             </div>
 
@@ -231,7 +235,7 @@ export default function Home() {
                 <div className="flex-1 text-center sm:text-left">
                   <h3 className="mb-2 text-lg font-bold text-white sm:text-xl">Escanea</h3>
                   <p className="text-xs text-white/90 sm:text-sm">
-                    Al registrarse genera tu código QR personal que facilita la validación de actividades.
+                    Al llegar al evento recibirás tu pasaporte físico. Escanéalo y desbloquea tu pasaporte digital, tu mapa para descubrir todas las actividades y recompensas que te esperan.
                   </p>
                 </div>
               </div>
@@ -248,7 +252,7 @@ export default function Home() {
                 <div className="flex-1 text-center sm:text-left">
                   <h3 className="mb-2 text-lg font-bold text-white sm:text-xl">Participa</h3>
                   <p className="text-xs text-white/80 sm:text-sm">
-                    Lleva un registro completo de las actividades, conferencias y stands que visites y en las que participes.
+                    Suma puntos, gana tokens y completa retos mientras disfrutas del evento. Cada actividad te acerca a más swag y nuevas sorpresas.
                   </p>
                 </div>
               </div>
@@ -265,7 +269,7 @@ export default function Home() {
                 <div className="flex-1 text-center sm:text-left">
                   <h3 className="mb-2 text-lg font-bold text-black sm:text-xl">Gana</h3>
                   <p className="text-xs text-black/80 sm:text-sm">
-                    Con cada actividad acumula tokens que puedes intercambiar por artículos coleccionables y NFTs exclusivos.
+                    Canjea tus tokens por merch exclusiva en nuestra tienda y presume tu estilo. Entre más participes, más épica será tu recompensa.
                   </p>
                 </div>
               </div>

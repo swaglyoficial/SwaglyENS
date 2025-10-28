@@ -37,8 +37,8 @@ export const ActionButtonList = () => {
       const currentChainIndex = chains.findIndex(c => c.id === wallet?.getChain()?.id)
       const nextChain = chains[(currentChainIndex + 1) % chains.length]
 
-      if (wallet) {
-        await switchChain(wallet, nextChain)
+      if (wallet && nextChain) {
+        await switchChain(nextChain)
       }
     } catch (error) {
       console.error('Failed to switch network:', error)

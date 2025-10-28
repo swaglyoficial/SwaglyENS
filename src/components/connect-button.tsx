@@ -32,7 +32,7 @@ export const ConnectButton = () => (
       connectButton={{
         label: "Conectar Wallet",
         style: {
-          background: '#00F0FF',
+          background: '#FEE887',
           color: '#000000',
           borderRadius: '9999px',
           fontSize: '15px',
@@ -40,7 +40,7 @@ export const ConnectButton = () => (
           padding: '10px 20px',
           border: 'none',
           cursor: 'pointer',
-          boxShadow: '0 0 20px rgba(0,240,255,0.45)',
+          boxShadow: '0 0 20px rgba(254,232,135,0.45)',
         }
       }}
       connectModal={{

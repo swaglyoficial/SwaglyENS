@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import Image from 'next/image'
@@ -28,6 +28,9 @@ export default function ProfilePage() {
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  // Ref para rastrear el estado previo de conexión
+  const wasConnected = useRef(isConnected)
 
   // NO redirigir automáticamente - solo mostrar loader
 
@@ -60,6 +63,16 @@ export default function ProfilePage() {
       fetchUserData()
     }
   }, [isConnected, address, router])
+
+  // Efecto separado para detectar desconexión
+  useEffect(() => {
+    // Solo redirigir si estaba conectado Y ahora está desconectado
+    if (wasConnected.current && !isConnected) {
+      router.push('/')
+    }
+    // Actualizar el ref con el estado actual
+    wasConnected.current = isConnected
+  }, [isConnected, router])
 
   const handleEditClick = () => {
     setIsEditing(true)

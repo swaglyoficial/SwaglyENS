@@ -237,6 +237,8 @@ export default function OnboardingPage() {
                       width={96}
                       height={96}
                       className="h-full w-full object-cover"
+                      loading="lazy"
+                      sizes="96px"
                     />
                   </div>
                   <div className="absolute -bottom-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#5061EC] text-sm font-bold">
@@ -256,6 +258,8 @@ export default function OnboardingPage() {
                       width={96}
                       height={96}
                       className="h-full w-full object-cover"
+                      loading="lazy"
+                      sizes="96px"
                     />
                   </div>
                   <div className="absolute -bottom-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#FEE887] text-sm font-bold text-black">
@@ -275,6 +279,8 @@ export default function OnboardingPage() {
                       width={96}
                       height={96}
                       className="h-full w-full object-cover"
+                      loading="lazy"
+                      sizes="96px"
                     />
                   </div>
                   <div className="absolute -bottom-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#5061EC] text-sm font-bold">
@@ -294,6 +300,8 @@ export default function OnboardingPage() {
                       width={96}
                       height={96}
                       className="h-full w-full object-cover"
+                      loading="lazy"
+                      sizes="96px"
                     />
                   </div>
                   <div className="absolute -bottom-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#FEE887] text-sm font-bold text-black">

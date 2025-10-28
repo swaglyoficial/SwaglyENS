@@ -1,0 +1,53 @@
+{
+  "name": "Swagly - Tu Pasaporte Web3",
+  "short_name": "Swagly",
+  "description": "Colecciona experiencias, escanea NFCs, gana tokens y construye tu perfil on-chain verificable en cada hackathon.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#5061EC",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["web3", "blockchain", "events", "social"],
+  "shortcuts": [
+    {
+      "name": "Mis Eventos",
+      "short_name": "Eventos",
+      "description": "Ver mis eventos y pasaportes",
+      "url": "/events",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Tienda",
+      "short_name": "Shop",
+      "description": "Comprar productos con tokens SWAG",
+      "url": "/shop",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Mi Perfil",
+      "short_name": "Perfil",
+      "description": "Ver mi perfil y balance",
+      "url": "/profile",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

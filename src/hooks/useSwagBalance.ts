@@ -25,12 +25,9 @@ export function useSwagBalance() {
   const { data, isLoading, isError, refetch } = useReadContract({
     contract,
     method: 'function balanceOf(address account) view returns (uint256)',
-    params: account?.address ? [account.address] : undefined,
+    params: [account?.address || '0x0000000000000000000000000000000000000000'],
     queryOptions: {
       enabled: !!account?.address, // Solo ejecutar si hay una dirección conectada
-      refetchInterval: false, // NO refrescar automáticamente - solo manual con refetch()
-      refetchOnWindowFocus: false, // NO refrescar cuando la ventana recibe focus
-      refetchOnMount: true, // Solo refrescar cuando el componente se monta
     },
   })
 

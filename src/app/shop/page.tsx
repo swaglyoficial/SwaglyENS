@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ConnectButton } from '@/components/connect-button'
@@ -10,14 +11,24 @@ import { useSwagBalance } from '@/hooks/useSwagBalance'
 import { useTransferSwag } from '@/hooks/useTransferSwag'
 import { useRequireProfile } from '@/hooks/useRequireProfile'
 import { Loader2, ExternalLink, CheckCircle2, AlertCircle, Menu, X } from 'lucide-react'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import Image from 'next/image'
+
+// Dynamic import del Dialog para reducir el bundle inicial
+const Dialog = dynamic(() => import('@/components/ui/dialog').then(mod => ({ default: mod.Dialog })), {
+  ssr: false
+})
+const DialogContent = dynamic(() => import('@/components/ui/dialog').then(mod => ({ default: mod.DialogContent })), {
+  ssr: false
+})
+const DialogFooter = dynamic(() => import('@/components/ui/dialog').then(mod => ({ default: mod.DialogFooter })), {
+  ssr: false
+})
+const DialogHeader = dynamic(() => import('@/components/ui/dialog').then(mod => ({ default: mod.DialogHeader })), {
+  ssr: false
+})
+const DialogTitle = dynamic(() => import('@/components/ui/dialog').then(mod => ({ default: mod.DialogTitle })), {
+  ssr: false
+})
 
 interface Product {
   id: string
@@ -477,6 +488,8 @@ export default function ShopPage() {
                         alt={product.title}
                         fill
                         className="object-cover"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                        loading="lazy"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center">

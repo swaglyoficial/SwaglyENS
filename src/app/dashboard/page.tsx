@@ -344,7 +344,7 @@ export default function DashboardPage() {
                     {currentPassport.event.name}
                   </h1>
                   <p className="mb-4 text-base text-white/80 sm:text-lg">
-                    Progreso de tus actividades
+                    {currentPassport.event.description}
                   </p>
                 </div>
               </div>
@@ -403,7 +403,7 @@ export default function DashboardPage() {
                             </h3>
                             {pa.activity.sponsor && (
                               <p className="mt-1 text-xs text-white/60 sm:text-sm">
-                                Patrocinado por {pa.activity.sponsor.name}
+                                Actividad de {pa.activity.sponsor.name}
                               </p>
                             )}
                             {pa.activity.description && (
@@ -555,7 +555,7 @@ export default function DashboardPage() {
                       <div className="mb-2 flex items-center gap-2">
                         <div className="h-1 w-6 rounded-full bg-gradient-to-r from-[#FEE887] to-[#FEE887]/40" />
                         <p className="text-xs font-bold uppercase tracking-wider text-[#FEE887]">
-                          Patrocinador
+                          Sponsor
                         </p>
                       </div>
                       <p className="text-base font-bold text-white sm:text-lg">

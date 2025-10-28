@@ -38,7 +38,7 @@ export const client = createThirdwebClient({
  * - scrollSepolia: Red de testnet para desarrollo
  * - scroll: Red principal de producción
  */
-export const chains = [scroll] as const
+export const chains = [scroll]
 
 /**
  * Chain por defecto
