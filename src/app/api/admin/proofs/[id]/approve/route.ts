@@ -56,7 +56,7 @@ export async function POST(
     console.log('====================================')
     console.log(`ðŸ"¤ Enviando ${proof.activity.numOfTokens} tokens a ${proof.user.walletAddress}`)
     console.log(`📋 Actividad: ${proof.activity.name}`)
-    console.log(`👤 Usuario: ${proof.user.name || proof.user.walletAddress}`)
+    console.log(`👤 Usuario: ${proof.user.nickname || proof.user.walletAddress}`)
     console.log('====================================')
 
     let transactionHash: string | null = null
