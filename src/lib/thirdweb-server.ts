@@ -1,5 +1,6 @@
 ﻿import {
   CREATOR_WALLET_ADDRESS,
+  CREATOR_WALLET_PRIVATE_KEY,
   DEFAULT_CLAIM_CONFIG,
   SCROLL_MAINNET_CHAIN_ID,
   SWAG_TOKEN_ADDRESS,
@@ -7,9 +8,48 @@
   THIRDWEB_SECRET_KEY,
   TOKEN_DECIMALS,
 } from './thirdweb-config'
+import { createWalletClient, http, createPublicClient, encodeFunctionData, parseAbi, defineChain } from 'viem'
+import { privateKeyToAccount } from 'viem/accounts'
+
+// Definir Scroll Mainnet manualmente
+const scrollMainnet = defineChain({
+  id: 534352,
+  name: 'Scroll',
+  network: 'scroll',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Ether',
+    symbol: 'ETH',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://rpc.scroll.io'],
+    },
+    public: {
+      http: ['https://rpc.scroll.io'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'Scrollscan',
+      url: 'https://scrollscan.com',
+    },
+  },
+  contracts: {
+    multicall3: {
+      address: '0xcA11bde05977b3631167028862bE2a173976CA11',
+      blockCreated: 14,
+    },
+  },
+})
 
 const CLAIM_METHOD_SIGNATURE =
   'function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, (bytes32[] proof, uint256 quantityLimitPerWallet, uint256 pricePerToken, address currency) _allowlistProof, bytes _data) payable'
+
+// ABI simplificado para el método claim
+const CLAIM_ABI = parseAbi([
+  CLAIM_METHOD_SIGNATURE
+])
 
 export class ThirdwebApiError extends Error {
   status: number
@@ -146,60 +186,119 @@ export async function claimTokensViaThirdweb(options: ClaimTokensOptions): Promi
 
   const allowlistProof = normalizeAllowlistProof(allowlistProofSource, currency)
 
-  const requestBody = {
-    chainId,
-    from: CREATOR_WALLET_ADDRESS,
-    calls: [
-      {
-        contractAddress,
-        method: CLAIM_METHOD_SIGNATURE,
-        params: [
-          options.receiverAddress,
-          quantityInWei.toString(),
-          currency,
-          toBigIntString(pricePerToken),
-          allowlistProof,
-          data,
-        ],
-      },
-    ],
-  }
-
-  const response = await fetch(THIRDWEB_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-secret-key': THIRDWEB_SECRET_KEY,
-    },
-    body: JSON.stringify(requestBody),
-  })
-
-  let payload: unknown
+  console.log('====================================')
+  console.log('🚀 CLAIM DE TOKENS CON VIEM')
+  console.log('====================================')
+  console.log('📋 Detalles del claim:')
+  console.log(`   - Receptor: ${options.receiverAddress}`)
+  console.log(`   - Cantidad: ${options.quantity} tokens (${quantityInWei.toString()} wei)`)
+  console.log(`   - Contrato: ${contractAddress}`)
+  console.log(`   - Chain: Scroll Mainnet (${chainId})`)
+  console.log(`   - Wallet firmante: ${CREATOR_WALLET_ADDRESS}`)
+  console.log('====================================')
 
   try {
-    payload = await response.json()
+    // Crear cuenta desde la private key
+    if (!CREATOR_WALLET_PRIVATE_KEY || CREATOR_WALLET_PRIVATE_KEY.trim() === '') {
+      throw new Error('CREATOR_WALLET_PRIVATE_KEY no está configurada en el .env')
+    }
+
+    const account = privateKeyToAccount(CREATOR_WALLET_PRIVATE_KEY.startsWith('0x')
+      ? CREATOR_WALLET_PRIVATE_KEY as `0x${string}`
+      : `0x${CREATOR_WALLET_PRIVATE_KEY}` as `0x${string}`)
+
+    console.log('✅ Cuenta creada desde private key:', account.address)
+
+    // Crear cliente público para leer estado de la blockchain
+    const publicClient = createPublicClient({
+      chain: scrollMainnet,
+      transport: http(),
+    })
+
+    // Crear cliente de wallet para firmar transacciones
+    const walletClient = createWalletClient({
+      account,
+      chain: scrollMainnet,
+      transport: http(),
+    })
+
+    console.log('✅ Clientes de viem creados')
+
+    // Preparar los parámetros del claim
+    const claimParams = [
+      options.receiverAddress,
+      quantityInWei,
+      currency as `0x${string}`,
+      BigInt(toBigIntString(pricePerToken)),
+      {
+        proof: allowlistProof[0],
+        quantityLimitPerWallet: BigInt(allowlistProof[1]),
+        pricePerToken: BigInt(allowlistProof[2]),
+        currency: allowlistProof[3] as `0x${string}`,
+      },
+      data,
+    ] as const
+
+    console.log('📦 Parámetros del claim:', {
+      receiver: options.receiverAddress,
+      quantity: quantityInWei.toString(),
+      currency,
+      pricePerToken: toBigIntString(pricePerToken),
+      allowlistProof: {
+        proof: allowlistProof[0],
+        quantityLimitPerWallet: allowlistProof[1],
+        pricePerToken: allowlistProof[2],
+        currency: allowlistProof[3],
+      },
+      data,
+    })
+
+    // Enviar la transacción
+    console.log('📤 Enviando transacción...')
+    const hash = await walletClient.writeContract({
+      address: contractAddress as `0x${string}`,
+      abi: CLAIM_ABI,
+      functionName: 'claim',
+      args: claimParams,
+      account,
+    })
+
+    console.log('✅ Transacción enviada!')
+    console.log('📝 Transaction Hash:', hash)
+
+    // Esperar a que se confirme la transacción
+    console.log('⏳ Esperando confirmación de la transacción...')
+    const receipt = await publicClient.waitForTransactionReceipt({
+      hash,
+      confirmations: 1,
+    })
+
+    console.log('====================================')
+    console.log('✅ TRANSACCIÓN CONFIRMADA')
+    console.log('====================================')
+    console.log(`📝 TX Hash: ${hash}`)
+    console.log(`📊 Block: ${receipt.blockNumber}`)
+    console.log(`⛽ Gas usado: ${receipt.gasUsed}`)
+    console.log(`✅ Status: ${receipt.status}`)
+    console.log('====================================')
+
+    return {
+      transactionHash: hash,
+      thirdwebResponse: { receipt, hash },
+      quantityInWei,
+    }
   } catch (error) {
-    payload = { error: 'Unable to parse Thirdweb API response', cause: error }
-  }
+    console.error('====================================')
+    console.error('❌ ERROR AL EJECUTAR CLAIM')
+    console.error('====================================')
+    console.error(error)
 
-  if (!response.ok) {
-    const message =
-      typeof payload === 'object' && payload && 'error' in payload
-        ? String((payload as { error: unknown }).error)
-        : `Thirdweb API responded with status ${response.status}`
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
 
-    throw new ThirdwebApiError(message, response.status, payload)
-  }
-
-  const transactionHash =
-    (payload as Record<string, any>)?.transactionHash ??
-    (payload as Record<string, any>)?.result?.transactionHash ??
-    (payload as Record<string, any>)?.receipt?.transactionHash ??
-    (payload as Record<string, any>)?.result?.receipt?.transactionHash
-
-  return {
-    transactionHash: transactionHash ?? undefined,
-    thirdwebResponse: payload,
-    quantityInWei,
+    throw new ThirdwebApiError(
+      `Error al ejecutar claim con viem: ${errorMessage}`,
+      500,
+      { error: errorMessage, originalError: error }
+    )
   }
 }

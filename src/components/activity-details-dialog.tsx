@@ -135,11 +135,7 @@ export function ActivityDetailsDialog({
       return
     }
 
-    // Validar tamaño (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError('La imagen es demasiado grande. Máximo 5MB')
-      return
-    }
+    // Sin restricción de tamaño
 
     setImageFile(file)
 
@@ -263,6 +259,19 @@ export function ActivityDetailsDialog({
         imageUrl = uploadData.url
       }
 
+      // Determinar el tipo de proof correcto para enviar al backend
+      let finalProofType = activity.proofType || 'text'
+      if (finalProofType === 'both') {
+        // Si es 'both', enviar 'both' si hay ambos, sino el que corresponda
+        if (textProof && imageUrl) {
+          finalProofType = 'both'
+        } else if (imageUrl) {
+          finalProofType = 'image'
+        } else {
+          finalProofType = 'text'
+        }
+      }
+
       // Enviar evidencia
       const response = await fetch('/api/proofs', {
         method: 'POST',
@@ -273,7 +282,7 @@ export function ActivityDetailsDialog({
           userId,
           activityId: activity.id,
           passportId,
-          proofType: activity.proofType || 'text',
+          proofType: finalProofType,
           textProof: needsText ? textProof : null,
           imageUrl,
         }),
@@ -553,7 +562,7 @@ export function ActivityDetailsDialog({
                             Haz clic para subir una imagen
                           </p>
                           <p className="mt-1 text-xs text-center text-white/50">
-                            JPG, PNG o WEBP (máx. 5MB)
+                            JPG, PNG o WEBP (cualquier tamaño)
                           </p>
                         </label>
                       ) : (

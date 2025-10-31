@@ -347,7 +347,7 @@ export async function POST(request: NextRequest) {
     // Intentar acuÃ±ar tokens si la actividad tiene recompensa
     if (activity.numOfTokens > 0) {
       try {
-        console.log(`ðŸ’° Reclamando ${activity.numOfTokens} SWAG tokens para ${passport.user.walletAddress}`)
+        console.log(`ðŸ'° Reclamando ${activity.numOfTokens} SWAG tokens para ${passport.user.walletAddress}`)
 
         const decimalsMultiplier = 10n ** BigInt(TOKEN_DECIMALS)
         const quantityInWei = BigInt(activity.numOfTokens) * decimalsMultiplier
@@ -358,7 +358,7 @@ export async function POST(request: NextRequest) {
           quantityInWei,
         })
 
-        rewardTxHash = claimResult.transactionHash ?? rewardTxHash
+        rewardTxHash = claimResult.transactionHash ?? null
         console.log(`Tokens reclamados. TX: ${claimResult.transactionHash ?? 'N/A'}`)
       } catch (error) {
         if (error instanceof ThirdwebApiError) {

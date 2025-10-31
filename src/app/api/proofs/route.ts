@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validar que el tipo de proof sea válido
-    if (!['text', 'image'].includes(proofType)) {
+    if (!['text', 'image', 'both'].includes(proofType)) {
       return NextResponse.json(
         { error: 'Tipo de prueba inválido' },
         { status: 400 }
@@ -37,6 +37,13 @@ export async function POST(request: NextRequest) {
     if (proofType === 'image' && !imageUrl) {
       return NextResponse.json(
         { error: 'La imagen es requerida' },
+        { status: 400 }
+      )
+    }
+
+    if (proofType === 'both' && !textProof && !imageUrl) {
+      return NextResponse.json(
+        { error: 'Se requiere al menos texto o imagen' },
         { status: 400 }
       )
     }
@@ -106,8 +113,8 @@ export async function POST(request: NextRequest) {
         where: { id: existingProof.id },
         data: {
           proofType,
-          textProof: proofType === 'text' ? textProof : null,
-          imageUrl: proofType === 'image' ? imageUrl : null,
+          textProof: (proofType === 'text' || proofType === 'both') ? textProof : null,
+          imageUrl: (proofType === 'image' || proofType === 'both') ? imageUrl : null,
           status: 'pending',
           rejectionReason: null,
           updatedAt: new Date(),
@@ -126,8 +133,8 @@ export async function POST(request: NextRequest) {
           activityId,
           passportId,
           proofType,
-          textProof: proofType === 'text' ? textProof : null,
-          imageUrl: proofType === 'image' ? imageUrl : null,
+          textProof: (proofType === 'text' || proofType === 'both') ? textProof : null,
+          imageUrl: (proofType === 'image' || proofType === 'both') ? imageUrl : null,
           status: 'pending',
         },
       })

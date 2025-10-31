@@ -51,40 +51,62 @@ export async function POST(
     }
 
     // PASO 1: Enviar tokens usando Thirdweb
-    console.log(`ðŸ“¤ Enviando ${proof.activity.numOfTokens} tokens a ${proof.user.walletAddress}`)
+    console.log('====================================')
+    console.log('🎫 APROBACIÓN MANUAL - ENVIANDO TOKENS')
+    console.log('====================================')
+    console.log(`ðŸ"¤ Enviando ${proof.activity.numOfTokens} tokens a ${proof.user.walletAddress}`)
+    console.log(`📋 Actividad: ${proof.activity.name}`)
+    console.log(`👤 Usuario: ${proof.user.name || proof.user.walletAddress}`)
+    console.log('====================================')
 
     let transactionHash: string | null = null
 
-    try {
-      const decimalsMultiplier = 10n ** BigInt(TOKEN_DECIMALS)
-      const quantityInWei = BigInt(proof.activity.numOfTokens) * decimalsMultiplier
+    // Validar que la actividad tiene tokens para enviar
+    if (proof.activity.numOfTokens <= 0) {
+      console.warn('⚠️ Esta actividad no tiene tokens configurados para enviar')
+      // Continuar sin enviar tokens, solo aprobar
+      transactionHash = null
+    } else {
+      try {
+        const decimalsMultiplier = 10n ** BigInt(TOKEN_DECIMALS)
+        const quantityInWei = BigInt(proof.activity.numOfTokens) * decimalsMultiplier
 
-      const claimResult = await claimTokensViaThirdweb({
-        receiverAddress: proof.user.walletAddress as `0x${string}`,
-        quantity: proof.activity.numOfTokens,
-        quantityInWei,
-      })
+        console.log(`💰 Cantidad a enviar: ${proof.activity.numOfTokens} tokens (${quantityInWei.toString()} wei)`)
 
-      transactionHash = claimResult.transactionHash ?? null
-      console.log(`Tokens enviados. TX: ${claimResult.transactionHash ?? 'N/A'}`)
-    } catch (error) {
-      if (error instanceof ThirdwebApiError) {
-        console.error('Error enviando tokens via Thirdweb API:', error.payload)
+        const claimResult = await claimTokensViaThirdweb({
+          receiverAddress: proof.user.walletAddress as `0x${string}`,
+          quantity: proof.activity.numOfTokens,
+          quantityInWei,
+        })
+
+        transactionHash = claimResult.transactionHash ?? null
+        console.log('====================================')
+        console.log(`✅ Tokens enviados exitosamente`)
+        console.log(`📝 TX Hash: ${claimResult.transactionHash ?? 'Transacción en proceso'}`)
+        console.log('====================================')
+      } catch (error) {
+        console.error('====================================')
+        console.error('❌ ERROR AL ENVIAR TOKENS')
+        console.error('====================================')
+
+        if (error instanceof ThirdwebApiError) {
+          console.error('Error de Thirdweb API:', error.payload)
+          return NextResponse.json(
+            {
+              error: 'Error al enviar tokens',
+              details: error.message,
+              thirdwebResponse: error.payload,
+            },
+            { status: error.status }
+          )
+        }
+
+        console.error('Error general:', error)
         return NextResponse.json(
-          {
-            error: 'Error al enviar tokens',
-            details: error.message,
-            thirdwebResponse: error.payload,
-          },
-          { status: error.status }
+          { error: 'Error al enviar tokens. Intenta nuevamente.' },
+          { status: 500 }
         )
       }
-
-      console.error('Error enviando tokens:', error)
-      return NextResponse.json(
-        { error: 'Error al enviar tokens. Intenta nuevamente.' },
-        { status: 500 }
-      )
     }
 // PASO 2: Actualizar prueba como aprobada (solo si el claim fue exitoso)
     const updatedProof = await prisma.activityProof.update({
@@ -94,7 +116,7 @@ export async function POST(
         validatedBy: adminId || 'admin',
         validatedAt: new Date(),
         tokensAwarded: proof.activity.numOfTokens,
-        transactionHash,
+        rewardTxHash: transactionHash,
       },
     })
 

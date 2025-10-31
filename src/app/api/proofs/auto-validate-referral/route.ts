@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
           quantityInWei,
         })
 
-        rewardTxHash = claimResult.transactionHash ?? rewardTxHash
+        rewardTxHash = claimResult.transactionHash ?? null
         console.log(`Tokens reclamados. TX: ${claimResult.transactionHash ?? 'N/A'}`)
       } catch (error) {
         if (error instanceof ThirdwebApiError) {
