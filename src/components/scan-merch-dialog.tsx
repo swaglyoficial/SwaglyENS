@@ -41,6 +41,8 @@ interface ScanMerchDialogProps {
   eventId: string         // ID del evento actual
   onScanSuccess: () => void  // Callback cuando el scan es exitoso
   refetchBalance?: () => void  // Función opcional para actualizar el balance de tokens
+  open?: boolean          // Estado controlado del diálogo (opcional)
+  onOpenChange?: (open: boolean) => void  // Callback para cambiar el estado (opcional)
 }
 
 export function ScanMerchDialog({
@@ -49,16 +51,22 @@ export function ScanMerchDialog({
   eventId,
   onScanSuccess,
   refetchBalance,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: ScanMerchDialogProps) {
   // ========================================
   // ESTADOS DEL COMPONENTE
   // ========================================
-  const [open, setOpen] = useState(false)                    // Estado del diálogo (abierto/cerrado)
+  const [internalOpen, setInternalOpen] = useState(false)    // Estado interno del diálogo (cuando no es controlado)
   const [isProcessing, setIsProcessing] = useState(false)    // Indicador de procesamiento del scan
   const [error, setError] = useState('')                     // Mensaje de error si algo falla
   const [success, setSuccess] = useState(false)              // Indicador de éxito
   const [transactionHash, setTransactionHash] = useState('') // Hash de la transacción de tokens
   const [activityInfo, setActivityInfo] = useState<{name: string, tokens: number} | null>(null) // Info de la actividad escaneada
+
+  // Usar estado controlado si se proporciona, sino usar estado interno
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen
+  const setOpen = controlledOnOpenChange || setInternalOpen
 
   /**
    * Maneja el escaneo exitoso del NFC/QR
@@ -114,7 +122,27 @@ export function ScanMerchDialog({
       })
 
       // ========================================
-      // PASO 2: REGISTRAR ESCANEO Y OTORGAR TOKENS
+      // VERIFICAR SI REQUIERE VALIDACIÓN MANUAL
+      // ========================================
+
+      if (nfc.activity.requiresProof) {
+        // Actividad con validación manual - NO enviar tokens aún
+        console.log('📝 Actividad requiere validación manual')
+
+        setError('Esta actividad requiere validación manual. Debes enviar evidencia desde el dashboard de tu pasaporte.')
+        setIsProcessing(false)
+
+        // Cerrar después de 4 segundos
+        setTimeout(() => {
+          setOpen(false)
+          onScanSuccess() // Refrescar dashboard para que vea la actividad
+        }, 4000)
+
+        return
+      }
+
+      // ========================================
+      // PASO 2: REGISTRAR ESCANEO Y OTORGAR TOKENS (SOLO SI NO REQUIERE VALIDACIÓN)
       // ========================================
 
       console.log('💾 Registrando escaneo...')
@@ -193,16 +221,18 @@ export function ScanMerchDialog({
   // ========================================
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {/* Botón que abre el diálogo - Estilo amarillo como en la imagen */}
-      <DialogTrigger asChild>
-        <Button
-          className="w-full rounded-full bg-gradient-to-r from-[#FEE887] to-[#FFFACD] text-black font-bold text-base shadow-2xl shadow-[#FEE887]/40 transition-all duration-300 hover:scale-105 hover:shadow-[#FEE887]/60 sm:text-lg"
-          size="lg"
-        >
-          <Scan className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
-          Escanear
-        </Button>
-      </DialogTrigger>
+      {/* Botón que abre el diálogo - Solo si no es controlado */}
+      {controlledOpen === undefined && (
+        <DialogTrigger asChild>
+          <Button
+            className="w-full rounded-full bg-gradient-to-r from-[#FEE887] to-[#FFFACD] text-black font-bold text-base shadow-2xl shadow-[#FEE887]/40 transition-all duration-300 hover:scale-105 hover:shadow-[#FEE887]/60 sm:text-lg"
+            size="lg"
+          >
+            <Scan className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+            Escanear
+          </Button>
+        </DialogTrigger>
+      )}
 
       {/* Contenido del diálogo - optimizado para móviles con colores Swagly */}
       <DialogContent className="border-[#5061EC]/30 bg-black/95 text-white backdrop-blur-xl w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto">

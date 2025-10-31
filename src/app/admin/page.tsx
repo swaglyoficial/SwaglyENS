@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { BarChart3, Calendar, Users, Zap, Building2, ShoppingBag, ShoppingCart } from "lucide-react"
+import { Calendar, Users, Zap, Building2, ShoppingBag, ShoppingCart, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -105,16 +105,10 @@ export default function AdminDashboard() {
             >
               <Link href="/">Ir a la app</Link>
             </Button>
-            <Button
-              asChild
-              className="w-full bg-cyan-500 text-black shadow-[0_0_30px_rgba(0,240,255,0.35)] hover:bg-cyan-400 sm:w-auto"
-            >
-              <Link href="/admin/analytics">Ver metricas</Link>
-            </Button>
           </div>
         </header>
 
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <Card className={glassCard}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">
@@ -148,24 +142,6 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <p className="text-4xl font-semibold text-white">{stats.totalActivities}</p>
-            </CardContent>
-          </Card>
-
-          <Card className={glassCard}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">
-                Analiticas
-              </CardTitle>
-              <BarChart3 className="h-5 w-5 text-cyan-300" />
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button
-                asChild
-                variant="outline"
-                className="w-full border-cyan-500/60 bg-black/40 text-cyan-100 hover:bg-cyan-500/10"
-              >
-                <Link href="/admin/analytics">Ir al dashboard</Link>
-              </Button>
             </CardContent>
           </Card>
         </section>
@@ -261,6 +237,26 @@ export default function AdminDashboard() {
                 className="w-full bg-cyan-500 text-black shadow-[0_0_24px_rgba(0,240,255,0.35)] hover:bg-cyan-400"
               >
                 <Link href="/admin/purchases">Ver compras</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className={minimalCard}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg text-white">
+                <CheckCircle2 className="h-5 w-5 text-cyan-300" />
+                Validación de Evidencias
+              </CardTitle>
+              <CardDescription className="text-sm text-cyan-200/80">
+                Revisa y valida evidencias de actividades.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 pt-0">
+              <Button
+                asChild
+                className="w-full bg-cyan-500 text-black shadow-[0_0_24px_rgba(0,240,255,0.35)] hover:bg-cyan-400"
+              >
+                <Link href="/admin/proofs">Validar evidencias</Link>
               </Button>
             </CardContent>
           </Card>

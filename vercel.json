@@ -1,0 +1,30 @@
+{
+  "functions": {
+    "src/app/api/claim-tokens/route.ts": {
+      "memory": 1024,
+      "maxDuration": 10,
+      "includeFiles": "node_modules/thirdweb/**"
+    },
+    "src/app/api/admin/proofs/[id]/approve/route.ts": {
+      "memory": 1024,
+      "maxDuration": 10,
+      "includeFiles": "node_modules/thirdweb/**"
+    },
+    "src/app/api/proofs/auto-validate/route.ts": {
+      "memory": 1024,
+      "maxDuration": 10,
+      "includeFiles": "node_modules/thirdweb/**"
+    },
+    "src/app/api/proofs/auto-validate-referral/route.ts": {
+      "memory": 1024,
+      "maxDuration": 10,
+      "includeFiles": "node_modules/thirdweb/**"
+    },
+    "src/app/api/**/route.ts": {
+      "memory": 1024,
+      "maxDuration": 10,
+      "excludeFiles": "node_modules/thirdweb/**"
+    }
+  },
+  "regions": ["iad1"]
+}

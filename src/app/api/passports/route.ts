@@ -108,6 +108,7 @@ export async function POST(request: NextRequest) {
           create: event.activities.map((activity) => ({
             activityId: activity.id,
             status: 'pending',
+            requiresProof: activity.requiresProof,
           })),
         },
       },

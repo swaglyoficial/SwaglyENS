@@ -12,23 +12,13 @@ import { useTransferSwag } from '@/hooks/useTransferSwag'
 import { useRequireProfile } from '@/hooks/useRequireProfile'
 import { Loader2, ExternalLink, CheckCircle2, AlertCircle, Menu, X } from 'lucide-react'
 import Image from 'next/image'
-
-// Dynamic import del Dialog para reducir el bundle inicial
-const Dialog = dynamic(() => import('@/components/ui/dialog').then(mod => ({ default: mod.Dialog })), {
-  ssr: false
-})
-const DialogContent = dynamic(() => import('@/components/ui/dialog').then(mod => ({ default: mod.DialogContent })), {
-  ssr: false
-})
-const DialogFooter = dynamic(() => import('@/components/ui/dialog').then(mod => ({ default: mod.DialogFooter })), {
-  ssr: false
-})
-const DialogHeader = dynamic(() => import('@/components/ui/dialog').then(mod => ({ default: mod.DialogHeader })), {
-  ssr: false
-})
-const DialogTitle = dynamic(() => import('@/components/ui/dialog').then(mod => ({ default: mod.DialogTitle })), {
-  ssr: false
-})
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 interface Product {
   id: string

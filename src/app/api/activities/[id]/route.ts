@@ -63,7 +63,21 @@ export async function PUT(
   try {
     const { id } = await params
     const body = await request.json()
-    const { name, description, numOfTokens, sponsorId } = body
+    const {
+      name,
+      description,
+      numOfTokens,
+      sponsorId,
+      validationType,
+      requiresProof,
+      proofType,
+      proofPrompt,
+      transactionPrompt,
+      referralPrompt,
+      onChainValidationType,
+      validationConfig,
+      successMessage
+    } = body
 
     // Validación del número de tokens si se proporciona
     if (numOfTokens !== undefined && numOfTokens < 0) {
@@ -73,14 +87,56 @@ export async function PUT(
       )
     }
 
+    // Preparar datos de actualización
+    const updateData: any = {}
+
+    if (name) updateData.name = name
+    if (description) updateData.description = description
+    if (numOfTokens !== undefined) updateData.numOfTokens = numOfTokens
+    if (sponsorId) updateData.sponsorId = sponsorId
+    if (validationType) updateData.validationType = validationType
+    if (requiresProof !== undefined) updateData.requiresProof = requiresProof
+    if (successMessage !== undefined) updateData.successMessage = successMessage
+
+    // Actualizar campos de validación según el tipo
+    if (validationType === 'manual') {
+      updateData.proofType = proofType || null
+      updateData.proofPrompt = proofPrompt || null
+      updateData.transactionPrompt = null
+      updateData.referralPrompt = null
+      updateData.onChainValidationType = null
+      updateData.validationConfig = null
+    } else if (validationType === 'auto_transaction') {
+      updateData.proofType = null
+      updateData.proofPrompt = null
+      updateData.transactionPrompt = transactionPrompt || null
+      updateData.referralPrompt = null
+      // Permitir actualizar campos on-chain
+      if (onChainValidationType !== undefined) {
+        updateData.onChainValidationType = onChainValidationType
+      }
+      if (validationConfig !== undefined) {
+        updateData.validationConfig = validationConfig
+      }
+    } else if (validationType === 'auto_referral_code') {
+      updateData.proofType = null
+      updateData.proofPrompt = null
+      updateData.transactionPrompt = null
+      updateData.referralPrompt = referralPrompt || null
+      updateData.onChainValidationType = null
+      updateData.validationConfig = null
+    } else if (validationType === 'scan') {
+      updateData.proofType = null
+      updateData.proofPrompt = null
+      updateData.transactionPrompt = null
+      updateData.referralPrompt = null
+      updateData.onChainValidationType = null
+      updateData.validationConfig = null
+    }
+
     const activity = await prisma.activity.update({
       where: { id },
-      data: {
-        ...(name && { name }),
-        ...(description && { description }),
-        ...(numOfTokens !== undefined && { numOfTokens }),
-        ...(sponsorId && { sponsorId }),
-      },
+      data: updateData,
       include: {
         sponsor: true,
       },

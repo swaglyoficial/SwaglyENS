@@ -52,7 +52,7 @@ export default function EventsPage() {
         if (response.ok && data.user) {
           setUser(data.user)
         } else {
-          router.push('/onboarding')
+          router.push('/inicio')
         }
       } catch (error) {
         console.error('Error fetching user data:', error)

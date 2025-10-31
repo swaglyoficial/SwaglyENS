@@ -25,6 +25,7 @@ export async function GET(
                 sponsor: true,
               },
             },
+            proof: true, // Incluir datos de prueba/evidencia si existen
           },
         },
       },

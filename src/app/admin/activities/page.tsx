@@ -66,6 +66,15 @@ export default function ActivitiesManagement() {
     description: "",
     sponsorId: "",
     numOfTokens: 0,
+    validationType: "scan",
+    requiresProof: false,
+    proofType: "text",
+    proofPrompt: "",
+    transactionPrompt: "",
+    referralPrompt: "",
+    onChainValidationType: "",
+    validationConfig: null as any,
+    successMessage: "",
   })
 
   const [nfcForm, setNfcForm] = useState({
@@ -188,6 +197,15 @@ export default function ActivitiesManagement() {
       description: activity.description,
       sponsorId: activity.sponsorId,
       numOfTokens: activity.numOfTokens,
+      validationType: activity.validationType || "scan",
+      requiresProof: activity.requiresProof || false,
+      proofType: activity.proofType || "text",
+      proofPrompt: activity.proofPrompt || "",
+      transactionPrompt: activity.transactionPrompt || "",
+      referralPrompt: activity.referralPrompt || "",
+      onChainValidationType: activity.onChainValidationType || "",
+      validationConfig: activity.validationConfig || null,
+      successMessage: activity.successMessage || "",
     })
     setIsActivityDialogOpen(true)
   }
@@ -198,6 +216,15 @@ export default function ActivitiesManagement() {
       description: "",
       sponsorId: "",
       numOfTokens: 0,
+      validationType: "scan",
+      requiresProof: false,
+      proofType: "text",
+      proofPrompt: "",
+      transactionPrompt: "",
+      referralPrompt: "",
+      onChainValidationType: "",
+      validationConfig: null,
+      successMessage: "",
     })
     setEditingActivity(null)
   }
@@ -351,7 +378,7 @@ export default function ActivitiesManagement() {
                   {editingActivity ? "Editar actividad" : "Nueva actividad"}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl border-cyan-500/30 bg-black/90 text-cyan-50">
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto border-cyan-500/30 bg-black/90 text-cyan-50">
                 <DialogHeader>
                   <DialogTitle className="text-white">
                     {editingActivity ? "Editar actividad" : "Crear actividad"}
@@ -448,6 +475,380 @@ export default function ActivitiesManagement() {
                         required
                       />
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="success-message" className="text-cyan-200/80">
+                      Mensaje de éxito personalizado (opcional)
+                    </Label>
+                    <Textarea
+                      id="success-message"
+                      placeholder="Ej: ¡Felicidades! Has completado el reto de Solidity. Los tokens han sido enviados a tu wallet."
+                      value={activityForm.successMessage}
+                      onChange={(e) =>
+                        setActivityForm({
+                          ...activityForm,
+                          successMessage: e.target.value,
+                        })
+                      }
+                      className="border-cyan-500/30 bg-black/60 text-cyan-100 placeholder:text-cyan-200/50"
+                      rows={3}
+                    />
+                    <p className="text-xs text-cyan-200/60">
+                      Este mensaje se mostrará cuando la actividad sea completada exitosamente. Si lo dejas vacío, se mostrará el mensaje predeterminado.
+                    </p>
+                  </div>
+
+                  {/* Tipo de Actividad */}
+                  <div className="rounded-2xl border border-[#5061EC]/20 bg-black/95 p-6">
+                    <h3 className="mb-4 text-xl font-bold text-white">
+                      Tipo de Actividad
+                    </h3>
+
+                    <div className="space-y-3">
+                      <label className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4 cursor-pointer hover:bg-white/10 transition-all">
+                        <input
+                          type="radio"
+                          name="validationType"
+                          value="scan"
+                          checked={activityForm.validationType === "scan"}
+                          onChange={(e) => {
+                            setActivityForm({
+                              ...activityForm,
+                              validationType: e.target.value,
+                              requiresProof: false
+                            })
+                          }}
+                          className="h-5 w-5 text-[#5061EC]"
+                        />
+                        <div>
+                          <p className="font-bold text-white">Escaneo simple</p>
+                          <p className="text-sm text-white/60">El usuario escanea y recibe tokens inmediatamente</p>
+                        </div>
+                      </label>
+
+                      <label className="flex items-center gap-3 rounded-xl border border-[#FEE887]/20 bg-[#FEE887]/5 p-4 cursor-pointer hover:bg-[#FEE887]/10 transition-all">
+                        <input
+                          type="radio"
+                          name="validationType"
+                          value="manual"
+                          checked={activityForm.validationType === "manual"}
+                          onChange={(e) => {
+                            setActivityForm({
+                              ...activityForm,
+                              validationType: e.target.value,
+                              requiresProof: true
+                            })
+                          }}
+                          className="h-5 w-5 text-[#FEE887]"
+                        />
+                        <div>
+                          <p className="font-bold text-white">Requiere validación manual</p>
+                          <p className="text-sm text-white/60">El usuario debe enviar evidencia antes de recibir tokens</p>
+                        </div>
+                      </label>
+
+                      <label className="flex items-center gap-3 rounded-xl border border-green-500/20 bg-green-500/5 p-4 cursor-pointer hover:bg-green-500/10 transition-all">
+                        <input
+                          type="radio"
+                          name="validationType"
+                          value="auto_transaction"
+                          checked={activityForm.validationType === "auto_transaction"}
+                          onChange={(e) => {
+                            setActivityForm({
+                              ...activityForm,
+                              validationType: e.target.value,
+                              requiresProof: true
+                            })
+                          }}
+                          className="h-5 w-5 text-green-500"
+                        />
+                        <div>
+                          <p className="font-bold text-white">Validación automática por transacción</p>
+                          <p className="text-sm text-white/60">El usuario envía un link de Scrollscan y se valida automáticamente</p>
+                        </div>
+                      </label>
+
+                      <label className="flex items-center gap-3 rounded-xl border border-purple-500/20 bg-purple-500/5 p-4 cursor-pointer hover:bg-purple-500/10 transition-all">
+                        <input
+                          type="radio"
+                          name="validationType"
+                          value="auto_referral_code"
+                          checked={activityForm.validationType === "auto_referral_code"}
+                          onChange={(e) => {
+                            setActivityForm({
+                              ...activityForm,
+                              validationType: e.target.value,
+                              requiresProof: true
+                            })
+                          }}
+                          className="h-5 w-5 text-purple-500"
+                        />
+                        <div>
+                          <p className="font-bold text-white">Validación automática por código de referido</p>
+                          <p className="text-sm text-white/60">El usuario envía un link y se verifica si contiene un refCode válido</p>
+                        </div>
+                      </label>
+                    </div>
+
+                    {/* Campos condicionales si requiere validación manual */}
+                    {activityForm.validationType === "manual" && (
+                      <div className="mt-6 space-y-4 rounded-xl border border-[#FEE887]/20 bg-gradient-to-br from-[#FEE887]/10 to-transparent p-6">
+                        <div>
+                          <Label className="mb-3 text-white">¿Qué tipo de evidencia requieres?</Label>
+
+                          <div className="space-y-3">
+                            <label className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-3 cursor-pointer hover:bg-white/10">
+                              <input
+                                type="radio"
+                                name="proofType"
+                                value="text"
+                                checked={activityForm.proofType === "text"}
+                                onChange={(e) => setActivityForm({ ...activityForm, proofType: e.target.value })}
+                                className="text-[#5061EC]"
+                              />
+                              <div className="flex items-center gap-2">
+                                <span className="text-2xl">📝</span>
+                                <span className="text-white font-medium">Solo texto</span>
+                              </div>
+                            </label>
+
+                            <label className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-3 cursor-pointer hover:bg-white/10">
+                              <input
+                                type="radio"
+                                name="proofType"
+                                value="image"
+                                checked={activityForm.proofType === "image"}
+                                onChange={(e) => setActivityForm({ ...activityForm, proofType: e.target.value })}
+                                className="text-[#5061EC]"
+                              />
+                              <div className="flex items-center gap-2">
+                                <span className="text-2xl">📸</span>
+                                <span className="text-white font-medium">Solo imagen</span>
+                              </div>
+                            </label>
+
+                            <label className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-3 cursor-pointer hover:bg-white/10">
+                              <input
+                                type="radio"
+                                name="proofType"
+                                value="both"
+                                checked={activityForm.proofType === "both"}
+                                onChange={(e) => setActivityForm({ ...activityForm, proofType: e.target.value })}
+                                className="text-[#5061EC]"
+                              />
+                              <div className="flex items-center gap-2">
+                                <span className="text-2xl">📝📸</span>
+                                <span className="text-white font-medium">Texto e imagen</span>
+                              </div>
+                            </label>
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label className="mb-2 text-white">Instrucciones para el usuario</Label>
+                          <Textarea
+                            value={activityForm.proofPrompt}
+                            onChange={(e) => setActivityForm({ ...activityForm, proofPrompt: e.target.value })}
+                            placeholder="Ej: Sube una foto del recibo de tu compra en el popup market"
+                            className="min-h-[100px] border-[#5061EC]/30 bg-black/50 text-white placeholder:text-white/40"
+                            required={activityForm.validationType === "manual"}
+                          />
+                          <p className="mt-2 text-xs text-white/50">
+                            Estas instrucciones se mostrarán al usuario cuando intente completar la actividad
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Campos condicionales si requiere validación automática de transacción */}
+                    {activityForm.validationType === "auto_transaction" && (
+                      <div className="mt-6 space-y-4 rounded-xl border border-green-500/20 bg-gradient-to-br from-green-500/10 to-transparent p-6">
+                        <div>
+                          <Label className="mb-2 text-white">Instrucciones para el usuario</Label>
+                          <Textarea
+                            value={activityForm.transactionPrompt}
+                            onChange={(e) => setActivityForm({ ...activityForm, transactionPrompt: e.target.value })}
+                            placeholder="Ej: Realiza una transacción en Scroll y pega el link de Scrollscan para validarla automáticamente"
+                            className="min-h-[100px] border-green-500/30 bg-black/50 text-white placeholder:text-white/40"
+                          />
+                          <p className="mt-2 text-xs text-white/50">
+                            El usuario deberá pegar el link completo de su transacción desde Scrollscan.com (ej: https://scrollscan.com/tx/0x...)
+                          </p>
+                        </div>
+
+                        {/* Validación On-Chain */}
+                        <div className="space-y-4 border-t border-green-500/20 pt-4">
+                          <Label className="text-white font-semibold">Validación On-Chain (Opcional)</Label>
+                          <p className="text-xs text-white/60">
+                            Configura validaciones específicas basadas en los eventos de la transacción
+                          </p>
+
+                          <Select
+                            value={activityForm.onChainValidationType || "none"}
+                            onValueChange={(value) => {
+                              // Reset validationConfig cuando cambia el tipo
+                              let defaultConfig = null
+                              const actualValue = value === "none" ? "" : value
+
+                              if (value === "usdc_transfer") {
+                                defaultConfig = { minAmount: 25, decimals: 6 }
+                              } else if (value === "cashback_event") {
+                                defaultConfig = { requirePaid: true }
+                              } else if (value === "token_transfer") {
+                                defaultConfig = { tokenAddresses: [], minAmount: 0 }
+                              }
+                              setActivityForm({
+                                ...activityForm,
+                                onChainValidationType: actualValue,
+                                validationConfig: defaultConfig
+                              })
+                            }}
+                          >
+                            <SelectTrigger className="border-green-500/30 bg-black/50 text-white">
+                              <SelectValue placeholder="Sin validación on-chain" />
+                            </SelectTrigger>
+                            <SelectContent className="border-green-500/30 bg-black/90 text-white">
+                              <SelectItem value="none">Sin validación on-chain</SelectItem>
+                              <SelectItem value="usdc_transfer">Transferencia USDC ≥ Monto</SelectItem>
+                              <SelectItem value="cashback_event">Evento Cashback</SelectItem>
+                              <SelectItem value="token_transfer">Transferencia de Tokens Específicos</SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          {/* Configuración USDC Transfer */}
+                          {activityForm.onChainValidationType === "usdc_transfer" && (
+                            <div className="space-y-3 rounded-lg border border-blue-500/20 bg-blue-500/5 p-4">
+                              <Label className="text-white text-sm">Configuración USDC Transfer</Label>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <Label className="text-xs text-white/70">Monto Mínimo</Label>
+                                  <Input
+                                    type="number"
+                                    value={activityForm.validationConfig?.minAmount || 25}
+                                    onChange={(e) => setActivityForm({
+                                      ...activityForm,
+                                      validationConfig: {
+                                        ...activityForm.validationConfig,
+                                        minAmount: parseFloat(e.target.value) || 0
+                                      }
+                                    })}
+                                    className="border-blue-500/30 bg-black/50 text-white"
+                                    placeholder="25"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs text-white/70">Decimales</Label>
+                                  <Input
+                                    type="number"
+                                    value={activityForm.validationConfig?.decimals || 6}
+                                    onChange={(e) => setActivityForm({
+                                      ...activityForm,
+                                      validationConfig: {
+                                        ...activityForm.validationConfig,
+                                        decimals: parseInt(e.target.value) || 6
+                                      }
+                                    })}
+                                    className="border-blue-500/30 bg-black/50 text-white"
+                                    placeholder="6"
+                                  />
+                                </div>
+                              </div>
+                              <p className="text-xs text-white/50">
+                                Se validará cualquier evento Transfer con value ≥ {activityForm.validationConfig?.minAmount || 25} tokens
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Configuración Cashback Event */}
+                          {activityForm.onChainValidationType === "cashback_event" && (
+                            <div className="space-y-3 rounded-lg border border-purple-500/20 bg-purple-500/5 p-4">
+                              <Label className="text-white text-sm">Configuración Cashback Event</Label>
+                              <label className="flex items-center gap-3">
+                                <input
+                                  type="checkbox"
+                                  checked={activityForm.validationConfig?.requirePaid ?? true}
+                                  onChange={(e) => setActivityForm({
+                                    ...activityForm,
+                                    validationConfig: {
+                                      requirePaid: e.target.checked
+                                    }
+                                  })}
+                                  className="h-4 w-4"
+                                />
+                                <span className="text-sm text-white/80">Requerir que el campo "paid" sea true</span>
+                              </label>
+                              <p className="text-xs text-white/50">
+                                Se buscará el evento Cashback en los logs de la transacción
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Configuración Token Transfer */}
+                          {activityForm.onChainValidationType === "token_transfer" && (
+                            <div className="space-y-3 rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-4">
+                              <Label className="text-white text-sm">Configuración Token Transfer</Label>
+                              <div>
+                                <Label className="text-xs text-white/70">Direcciones de Contratos (una por línea)</Label>
+                                <Textarea
+                                  value={(activityForm.validationConfig?.tokenAddresses || []).join('\n')}
+                                  onChange={(e) => {
+                                    const addresses = e.target.value.split('\n').filter(addr => addr.trim() !== '')
+                                    setActivityForm({
+                                      ...activityForm,
+                                      validationConfig: {
+                                        ...activityForm.validationConfig,
+                                        tokenAddresses: addresses
+                                      }
+                                    })
+                                  }}
+                                  placeholder="0x01f0a31698c4d065659b9bdc21b3610292a1c506
+0xOtherTokenAddress..."
+                                  className="min-h-[80px] border-cyan-500/30 bg-black/50 text-white placeholder:text-white/40 font-mono text-xs"
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-xs text-white/70">Monto Mínimo (opcional, 0 = cualquier monto)</Label>
+                                <Input
+                                  type="number"
+                                  value={activityForm.validationConfig?.minAmount || 0}
+                                  onChange={(e) => setActivityForm({
+                                    ...activityForm,
+                                    validationConfig: {
+                                      ...activityForm.validationConfig,
+                                      minAmount: parseFloat(e.target.value) || 0
+                                    }
+                                  })}
+                                  className="border-cyan-500/30 bg-black/50 text-white"
+                                  placeholder="0"
+                                />
+                              </div>
+                              <p className="text-xs text-white/50">
+                                Se validará que la transacción contenga una transferencia de alguno de estos tokens
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Campos condicionales si requiere validación automática de código de referido */}
+                    {activityForm.validationType === "auto_referral_code" && (
+                      <div className="mt-6 space-y-4 rounded-xl border border-purple-500/20 bg-gradient-to-br from-purple-500/10 to-transparent p-6">
+                        <div>
+                          <Label className="mb-2 text-white">Instrucciones para el usuario</Label>
+                          <Textarea
+                            value={activityForm.referralPrompt}
+                            onChange={(e) => setActivityForm({ ...activityForm, referralPrompt: e.target.value })}
+                            placeholder="Ej: Completa el registro y pega el link que te proporcionaron (debe contener tu código de referido)"
+                            className="min-h-[100px] border-purple-500/30 bg-black/50 text-white placeholder:text-white/40"
+                          />
+                          <p className="mt-2 text-xs text-white/50">
+                            El sistema buscará automáticamente si el link contiene un código de referido válido (refCode)
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <DialogFooter className="gap-2 sm:justify-end">

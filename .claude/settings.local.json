@@ -20,7 +20,17 @@
       "WebSearch",
       "WebFetch(domain:0x.org)",
       "WebFetch(domain:pagespeed.web.dev)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "WebFetch(domain:docs.etherscan.io)",
+      "Bash(vercel --prod:*)",
+      "WebFetch(domain:vercel.link)",
+      "WebFetch(domain:vercel.com)",
+      "Bash(rm:*)",
+      "Bash(if [ -d \"src/app/onboarding\" ])",
+      "Bash(then rmdir \"src/app/onboarding\")",
+      "Bash(else echo \"Directory already removed\")",
+      "Bash(fi)"
     ],
     "deny": [],
     "ask": []

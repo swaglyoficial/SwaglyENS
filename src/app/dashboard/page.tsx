@@ -4,34 +4,49 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useRequireProfile } from '@/hooks/useRequireProfile'
 import Image from 'next/image'
-import { Loader2, CheckCircle2, Circle, Menu, X } from 'lucide-react'
+import { Loader2, CheckCircle2, Circle, Menu, X, Clock, XCircle, FileText, Scan } from 'lucide-react'
 import { ConnectButton } from '@/components/connect-button'
 import { TokenBalance } from '@/components/token-balance'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { ScanMerchDialog } from '@/components/scan-merch-dialog'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { ActivityDetailsDialog } from '@/components/activity-details-dialog'
+import { Button } from '@/components/ui/button'
 
 interface Activity {
   id: string
   name: string
   description: string
   numOfTokens: number
+  validationType: string
+  requiresProof: boolean
+  proofType?: string | null
+  proofPrompt?: string | null
+  transactionPrompt?: string | null
+  referralPrompt?: string | null
+  onChainValidationType?: string | null
+  validationConfig?: any
+  successMessage?: string | null
   sponsor?: {
     name: string
   }
+}
+
+interface ActivityProof {
+  id: string
+  status: 'pending' | 'approved' | 'rejected'
+  rejectionReason?: string
+  createdAt: string
 }
 
 interface PassportActivity {
   activityId: string
   status: 'pending' | 'completed'
   timestamp: string
+  proofId?: string
+  requiresProof: boolean
   activity: Activity
+  proof?: ActivityProof
 }
 
 interface Passport {
@@ -63,6 +78,7 @@ export default function DashboardPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [selectedActivity, setSelectedActivity] = useState<PassportActivity | null>(null)
   const [showActivityDialog, setShowActivityDialog] = useState(false)
+  const [showScanDialog, setShowScanDialog] = useState(false)
 
   // Capturar passportId de URL query params
   const getPassportIdFromUrl = () => {
@@ -85,14 +101,14 @@ export default function DashboardPage() {
 
       if (!response.ok) {
         if (response.status === 404) {
-          router.push('/onboarding')
+          router.push('/inicio')
           return
         }
         throw new Error(data.error || 'Error al cargar datos')
       }
 
       if (!data.user.passports || data.user.passports.length === 0) {
-        router.push('/onboarding')
+        router.push('/inicio')
         return
       }
 
@@ -302,22 +318,6 @@ export default function DashboardPage() {
       {/* Content */}
       <section className="relative z-10 px-6 py-8 sm:px-12 lg:px-20">
         <div className="mx-auto max-w-5xl">
-          {/* Botón de escanear al inicio - Como en la imagen de referencia */}
-          <div className="mb-8">
-            <div className="rounded-3xl bg-gradient-to-br from-[#5061EC]/20 to-[#5061EC]/5 p-6 sm:p-8">
-              <h3 className="mb-4 text-center text-lg font-bold text-white sm:text-xl">
-                Escanea los stickers para poder completar tus actividades.
-              </h3>
-              <ScanMerchDialog
-                userId={user!.id}
-                walletAddress={address!}
-                eventId={currentPassport.event.id}
-                onScanSuccess={fetchUserData}
-                refetchBalance={() => {}}
-              />
-            </div>
-          </div>
-
           {/* Event Passport Card - Con actividades dentro */}
           <div className="group relative mb-12 overflow-hidden rounded-3xl bg-gradient-to-br from-[#5061EC] to-[#4051CC] p-8 shadow-2xl shadow-[#5061EC]/30 transition-all duration-300 hover:shadow-[#5061EC]/50 sm:p-12">
             {/* Efecto hover */}
@@ -358,10 +358,34 @@ export default function DashboardPage() {
                   </p>
                 </div>
 
-                {/* Lista de actividades */}
-                <div className="space-y-4">
+                {/* Lista de actividades - Simplificada */}
+                <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
                   {currentPassport.activities.map((pa) => {
                     const isCompleted = pa.status === 'completed'
+                    const proof = pa.proof
+                    const isPending = proof?.status === 'pending'
+                    const isRejected = proof?.status === 'rejected'
+                    const isApproved = proof?.status === 'approved'
+
+                    // Determinar estado visual
+                    let borderColor = 'border-white/20'
+                    let statusColor = 'text-white/60'
+                    let statusIcon = <Circle className="h-4 w-4" />
+
+                    if (isCompleted || isApproved) {
+                      borderColor = 'border-green-500/40'
+                      statusColor = 'text-green-400'
+                      statusIcon = <CheckCircle2 className="h-4 w-4" />
+                    } else if (isPending) {
+                      borderColor = 'border-yellow-500/40'
+                      statusColor = 'text-yellow-400'
+                      statusIcon = <Clock className="h-4 w-4" />
+                    } else if (isRejected) {
+                      borderColor = 'border-red-500/40'
+                      statusColor = 'text-red-400'
+                      statusIcon = <XCircle className="h-4 w-4" />
+                    }
+
                     return (
                       <div
                         key={pa.activityId}
@@ -369,60 +393,54 @@ export default function DashboardPage() {
                           setSelectedActivity(pa)
                           setShowActivityDialog(true)
                         }}
-                        className={`group/activity relative overflow-hidden rounded-2xl border p-4 transition-all duration-300 cursor-pointer sm:p-5 ${
-                          isCompleted
-                            ? 'border-green-500/40 bg-gradient-to-br from-green-500/10 to-green-500/5 shadow-lg shadow-green-500/10'
-                            : 'border-white/20 bg-gradient-to-br from-white/5 to-transparent hover:border-white/30 hover:bg-white/10 hover:shadow-xl'
-                        }`}
+                        className={`group relative overflow-hidden rounded-xl border ${borderColor} bg-gradient-to-br from-white/5 to-transparent p-4 transition-all duration-300 cursor-pointer hover:border-white/40 hover:bg-white/10 hover:shadow-lg hover:shadow-white/5`}
                       >
-                        {/* Efecto decorativo */}
-                        <div className={`absolute inset-0 transition-opacity duration-300 ${
-                          isCompleted
-                            ? 'bg-gradient-to-r from-green-500/5 to-transparent opacity-100'
-                            : 'bg-gradient-to-r from-[#FEE887]/5 to-transparent opacity-0 group-hover/activity:opacity-100'
-                        }`} />
-
-                        <div className="relative z-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-                          {/* Checkbox Icon mejorado */}
-                          <div className="shrink-0 self-start sm:self-auto">
-                            {isCompleted ? (
-                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-green-500/30 to-green-500/10 shadow-lg sm:h-12 sm:w-12">
-                                <CheckCircle2 className="h-6 w-6 text-green-400 sm:h-7 sm:w-7" />
+                        <div className="space-y-3">
+                          {/* Header con status y tokens */}
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-2 flex-1 min-w-0">
+                              <div className={`shrink-0 mt-0.5 ${statusColor}`}>
+                                {statusIcon}
                               </div>
-                            ) : (
-                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-white/10 to-white/5 shadow-lg transition-all duration-300 group-hover/activity:scale-110 group-hover/activity:from-[#FEE887]/20 group-hover/activity:to-[#FEE887]/5 sm:h-12 sm:w-12">
-                                <Circle className="h-6 w-6 text-white/40 transition-colors group-hover/activity:text-white/60 sm:h-7 sm:w-7" />
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-bold text-white text-sm sm:text-base line-clamp-2">
+                                  {pa.activity.name}
+                                </h3>
+                                {pa.activity.sponsor && (
+                                  <p className="text-xs text-white/50 mt-0.5">
+                                    {pa.activity.sponsor.name}
+                                  </p>
+                                )}
                               </div>
-                            )}
+                            </div>
+                            <div className="shrink-0">
+                              <div className="rounded-full bg-gradient-to-r from-[#FEE887]/30 to-[#FFFACD]/20 px-2.5 py-1 text-xs font-bold text-[#FEE887] sm:px-3">
+                                {pa.activity.numOfTokens}
+                              </div>
+                            </div>
                           </div>
 
-                          {/* Activity Info mejorada */}
-                          <div className="flex-1 min-w-0">
-                            <h3 className={`text-base font-bold sm:text-lg ${isCompleted ? 'text-white/80' : 'text-white'}`}>
-                              {pa.activity.name}
-                            </h3>
-                            {pa.activity.sponsor && (
-                              <p className="mt-1 text-xs text-white/60 sm:text-sm">
-                                Actividad de {pa.activity.sponsor.name}
-                              </p>
-                            )}
-                            {pa.activity.description && (
-                              <p className="mt-1 text-xs text-white/50 line-clamp-1 sm:line-clamp-none">
-                                {pa.activity.description}
-                              </p>
-                            )}
-                          </div>
+                          {/* Descripción */}
+                          {pa.activity.description && (
+                            <p className="text-xs text-white/60 line-clamp-2">
+                              {pa.activity.description}
+                            </p>
+                          )}
 
-                          {/* Tokens Badge mejorado - Ahora en su propia línea en móvil */}
-                          <div className="shrink-0 self-start sm:self-auto">
-                            <div
-                              className={`rounded-full px-3 py-1.5 text-sm font-bold shadow-lg transition-all duration-300 sm:px-4 sm:py-2 ${
-                                isCompleted
-                                  ? 'bg-gradient-to-r from-green-500/30 to-green-500/20 text-green-200 shadow-green-500/20'
-                                  : 'bg-gradient-to-r from-[#FEE887]/30 to-[#FFFACD]/20 text-[#FEE887] shadow-[#FEE887]/20 group-hover/activity:scale-110'
-                              }`}
-                            >
-                              {pa.activity.numOfTokens} SWAG
+                          {/* Call to action */}
+                          <div className="pt-2">
+                            <div className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#FEE887]/20 to-[#FEE887]/10 px-3 py-2 border border-[#FEE887]/30 group-hover:from-[#FEE887]/30 group-hover:to-[#FEE887]/20 group-hover:border-[#FEE887]/50 transition-all">
+                              <span className="text-xs font-bold text-[#FEE887] sm:text-sm">
+                                Ver detalles
+                              </span>
+                              <svg
+                                className="h-3 w-3 text-[#FEE887] group-hover:translate-x-1 transition-transform sm:h-4 sm:w-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
                             </div>
                           </div>
                         </div>
@@ -474,134 +492,30 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* Diálogo de detalles de actividad */}
-      <Dialog open={showActivityDialog} onOpenChange={setShowActivityDialog}>
-        <DialogContent className="left-4 right-4 max-h-[90vh] w-[calc(100%-2rem)] translate-x-0 overflow-y-auto border-[#5061EC]/30 bg-gradient-to-br from-black via-[#5061EC]/5 to-black p-0 text-white backdrop-blur-xl sm:left-[50%] sm:right-auto sm:w-full sm:max-w-lg sm:translate-x-[-50%]">
-          {selectedActivity && (
-            <>
-              {/* DialogTitle oculto para accesibilidad */}
-              <DialogTitle className="sr-only">
-                Detalles de la actividad: {selectedActivity.activity.name}
-              </DialogTitle>
+      {/* Activity Details Dialog - Unificado */}
+      {user && currentPassport && (
+        <ActivityDetailsDialog
+          passportActivity={selectedActivity}
+          userId={user.id}
+          passportId={currentPassport.id}
+          open={showActivityDialog}
+          onOpenChange={setShowActivityDialog}
+          onSuccess={fetchUserData}
+        />
+      )}
 
-              {/* Header con gradiente */}
-              <div className="relative overflow-hidden rounded-t-2xl bg-gradient-to-br from-[#5061EC] to-[#4051CC] px-6 pb-8 pt-12">
-                {/* Efecto de fondo */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-50" />
-
-                <div className="relative z-10">
-                  {/* Status Badge */}
-                  <div className="mb-4 flex justify-center">
-                    {selectedActivity.status === 'completed' ? (
-                      <div className="flex items-center gap-2 rounded-full border-2 border-green-400/40 bg-green-500/20 px-4 py-2 shadow-lg shadow-green-500/20 backdrop-blur-sm">
-                        <CheckCircle2 className="h-5 w-5 text-green-300" />
-                        <span className="font-bold text-green-100">✓ Completada</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 rounded-full border-2 border-[#FEE887]/40 bg-[#FEE887]/20 px-4 py-2 shadow-lg shadow-[#FEE887]/20 backdrop-blur-sm">
-                        <Circle className="h-5 w-5 text-[#FEE887]" />
-                        <span className="font-bold text-[#FEE887]">Pendiente</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Activity Name */}
-                  <h3 className="text-center text-xl font-bold leading-tight text-white sm:text-2xl">
-                    {selectedActivity.activity.name}
-                  </h3>
-
-                  {/* Tokens Badge - Destacado */}
-                  <div className="mt-5 flex justify-center">
-                    <div className="relative">
-                      <div className="absolute -inset-2 animate-pulse rounded-full bg-[#FEE887]/20 blur-xl" />
-                      <div className="relative rounded-full bg-gradient-to-r from-[#FEE887] to-[#FFFACD] px-5 py-2.5 shadow-xl shadow-[#FEE887]/30">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold text-black/70 sm:text-sm">Recompensa:</span>
-                          <span className="text-lg font-bold text-black sm:text-xl">
-                            {selectedActivity.activity.numOfTokens} SWAG
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="space-y-3 p-6">
-                {/* Description */}
-                {selectedActivity.activity.description && (
-                  <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-white/5 to-transparent p-4 transition-all duration-300 hover:border-white/20 hover:bg-white/10">
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#5061EC]/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                    <div className="relative z-10">
-                      <div className="mb-2 flex items-center gap-2">
-                        <div className="h-1 w-6 rounded-full bg-gradient-to-r from-[#5061EC] to-[#5061EC]/40" />
-                        <p className="text-xs font-bold uppercase tracking-wider text-[#5061EC]">
-                          Descripción
-                        </p>
-                      </div>
-                      <p className="text-sm leading-relaxed text-white/90">
-                        {selectedActivity.activity.description}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Sponsor */}
-                {selectedActivity.activity.sponsor && (
-                  <div className="group relative overflow-hidden rounded-xl border border-[#FEE887]/20 bg-gradient-to-br from-[#FEE887]/10 to-transparent p-4 transition-all duration-300 hover:border-[#FEE887]/30 hover:shadow-lg hover:shadow-[#FEE887]/10">
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#FEE887]/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                    <div className="relative z-10">
-                      <div className="mb-2 flex items-center gap-2">
-                        <div className="h-1 w-6 rounded-full bg-gradient-to-r from-[#FEE887] to-[#FEE887]/40" />
-                        <p className="text-xs font-bold uppercase tracking-wider text-[#FEE887]">
-                          Sponsor
-                        </p>
-                      </div>
-                      <p className="text-base font-bold text-white sm:text-lg">
-                        {selectedActivity.activity.sponsor.name}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Completed Timestamp */}
-                {selectedActivity.status === 'completed' && selectedActivity.timestamp && (
-                  <div className="group relative overflow-hidden rounded-xl border border-green-500/20 bg-gradient-to-br from-green-500/10 to-transparent p-4 transition-all duration-300 hover:border-green-500/30 hover:shadow-lg hover:shadow-green-500/10">
-                    <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                    <div className="relative z-10">
-                      <div className="mb-2 flex items-center gap-2">
-                        <div className="h-1 w-6 rounded-full bg-gradient-to-r from-green-400 to-green-400/40" />
-                        <p className="text-xs font-bold uppercase tracking-wider text-green-300">
-                          Completada el
-                        </p>
-                      </div>
-                      <p className="text-sm font-semibold text-green-200">
-                        {new Date(selectedActivity.timestamp).toLocaleDateString('es-ES', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Info adicional */}
-                <div className="rounded-xl border border-white/5 bg-white/5 p-3 backdrop-blur-sm">
-                  <p className="text-center text-xs leading-relaxed text-white/60">
-                    {selectedActivity.status === 'completed'
-                      ? '¡Felicitaciones! Has completado esta actividad y ganado tus tokens SWAG.'
-                      : 'Escanea el código QR en el stand correspondiente para completar esta actividad y ganar tokens SWAG.'}
-                  </p>
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Scan Merch Dialog */}
+      {user && currentPassport && (
+        <ScanMerchDialog
+          userId={user.id}
+          walletAddress={address!}
+          eventId={currentPassport.event.id}
+          open={showScanDialog}
+          onOpenChange={setShowScanDialog}
+          onScanSuccess={fetchUserData}
+          refetchBalance={() => {}}
+        />
+      )}
     </main>
   )
 }

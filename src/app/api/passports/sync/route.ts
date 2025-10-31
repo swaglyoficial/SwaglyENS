@@ -78,10 +78,10 @@ export async function POST(request: NextRequest) {
     // PASO 2: Sincronizar cada pasaporte
     // ========================================
     for (const passport of passportsToSync) {
-      // Obtener todas las actividades del evento
+      // Obtener todas las actividades del evento (con requiresProof)
       const eventActivities = await prisma.activity.findMany({
         where: { eventId: passport.eventId },
-        select: { id: true },
+        select: { id: true, requiresProof: true },
       })
 
       // Obtener actividades que ya están en el pasaporte
@@ -108,6 +108,7 @@ export async function POST(request: NextRequest) {
             passportId: passport.id,
             activityId: activity.id,
             status: 'pending',
+            requiresProof: activity.requiresProof,
           })),
           skipDuplicates: true,
         })

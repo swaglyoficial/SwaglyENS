@@ -9,6 +9,8 @@ import {
   DEFAULT_CLAIM_CONDITION,
 } from '@/lib/thirdweb-config'
 
+export const runtime = 'edge'
+
 /**
  * ============================================
  * POST /api/set-claim-conditions

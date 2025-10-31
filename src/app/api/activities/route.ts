@@ -53,7 +53,22 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { eventId, sponsorId, name, description, numOfTokens } = body
+    const {
+      eventId,
+      sponsorId,
+      name,
+      description,
+      numOfTokens,
+      validationType,
+      requiresProof,
+      proofType,
+      proofPrompt,
+      transactionPrompt,
+      referralPrompt,
+      onChainValidationType,
+      validationConfig,
+      successMessage
+    } = body
 
     // Validación de campos requeridos
     if (!eventId || !sponsorId || !name || !description) {
@@ -69,6 +84,68 @@ export async function POST(request: NextRequest) {
         { error: 'El número de tokens debe ser positivo' },
         { status: 400 }
       )
+    }
+
+    // Validar campos de validación manual
+    if (validationType === 'manual' && requiresProof) {
+      if (!proofType || !proofPrompt) {
+        return NextResponse.json(
+          { error: 'Para actividades con validación manual debes especificar el tipo de evidencia y las instrucciones' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Validar campos de validación on-chain
+    if (onChainValidationType) {
+      // Solo permitir con auto_transaction
+      if (validationType !== 'auto_transaction') {
+        return NextResponse.json(
+          { error: 'La validación on-chain solo está disponible para actividades de tipo "auto_transaction"' },
+          { status: 400 }
+        )
+      }
+
+      // Validar tipos permitidos
+      const validOnChainTypes = ['usdc_transfer', 'cashback_event', 'token_transfer']
+      if (!validOnChainTypes.includes(onChainValidationType)) {
+        return NextResponse.json(
+          { error: `Tipo de validación on-chain inválido. Debe ser: ${validOnChainTypes.join(', ')}` },
+          { status: 400 }
+        )
+      }
+
+      // Validar que venga validationConfig si se especifica tipo
+      if (!validationConfig) {
+        return NextResponse.json(
+          { error: 'Se requiere validationConfig cuando se especifica onChainValidationType' },
+          { status: 400 }
+        )
+      }
+
+      // Validar estructura de validationConfig según el tipo
+      if (onChainValidationType === 'usdc_transfer') {
+        if (typeof validationConfig.minAmount !== 'number' || typeof validationConfig.decimals !== 'number') {
+          return NextResponse.json(
+            { error: 'Para "usdc_transfer" se requiere validationConfig con: { minAmount: number, decimals: number }' },
+            { status: 400 }
+          )
+        }
+      } else if (onChainValidationType === 'cashback_event') {
+        if (typeof validationConfig.requirePaid !== 'boolean') {
+          return NextResponse.json(
+            { error: 'Para "cashback_event" se requiere validationConfig con: { requirePaid: boolean }' },
+            { status: 400 }
+          )
+        }
+      } else if (onChainValidationType === 'token_transfer') {
+        if (!Array.isArray(validationConfig.tokenAddresses) || validationConfig.tokenAddresses.length === 0) {
+          return NextResponse.json(
+            { error: 'Para "token_transfer" se requiere validationConfig con: { tokenAddresses: string[] }' },
+            { status: 400 }
+          )
+        }
+      }
     }
 
     // Verificar que el evento y sponsor existen
@@ -95,6 +172,15 @@ export async function POST(request: NextRequest) {
         name,
         description,
         numOfTokens: numOfTokens || 0,
+        validationType: validationType || 'scan',
+        requiresProof: requiresProof || false,
+        proofType: validationType === 'manual' ? proofType : null,
+        proofPrompt: validationType === 'manual' ? (proofPrompt || null) : null,
+        transactionPrompt: validationType === 'auto_transaction' ? (transactionPrompt || null) : null,
+        referralPrompt: validationType === 'auto_referral_code' ? (referralPrompt || null) : null,
+        onChainValidationType: validationType === 'auto_transaction' ? (onChainValidationType || null) : null,
+        validationConfig: validationType === 'auto_transaction' ? (validationConfig || null) : null,
+        successMessage: successMessage || null,
       },
       include: {
         sponsor: true,
@@ -120,6 +206,7 @@ export async function POST(request: NextRequest) {
           passportId: passport.id,
           activityId: activity.id,
           status: 'pending',
+          requiresProof: requiresProof || false,
         })),
         skipDuplicates: true, // Evitar errores si ya existe
       })
