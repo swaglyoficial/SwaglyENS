@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { ConnectButton } from '@/components/connect-button'
 import { TokenBalance } from '@/components/token-balance'
 import { useSwagBalance } from '@/hooks/useSwagBalance'
-import { useTransferSwag } from '@/hooks/useTransferSwag'
+import { useTransferSwagSponsored } from '@/hooks/useTransferSwagSponsored'
 import { useRequireProfile } from '@/hooks/useRequireProfile'
 import { Loader2, ExternalLink, CheckCircle2, AlertCircle, Menu, X } from 'lucide-react'
 import Image from 'next/image'
@@ -45,7 +45,7 @@ export default function ShopPage() {
   const router = useRouter()
   const { hasProfile, isChecking, address, isConnected } = useRequireProfile()
   const { balance, refetch } = useSwagBalance()
-  const { transferSwag, hash, isPending, isConfirming, isConfirmed, error: transferError } = useTransferSwag()
+  const { transferSwagSponsored, hash, isPending, isConfirming, isConfirmed, error: transferError } = useTransferSwagSponsored()
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
@@ -151,7 +151,7 @@ export default function ShopPage() {
   const handleConfirmPurchase = () => {
     if (!selectedProduct || !address) return
     setPurchaseStatus({ type: null, message: '' })
-    transferSwag(CREATOR_WALLET_ADDRESS, selectedProduct.price)
+    transferSwagSponsored(CREATOR_WALLET_ADDRESS, selectedProduct.price)
   }
 
   const handleCloseDialog = () => {
