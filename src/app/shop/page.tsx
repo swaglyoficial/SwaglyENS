@@ -480,6 +480,7 @@ export default function ShopPage() {
                         className="object-cover"
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
                         loading="lazy"
+                        unoptimized
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center">

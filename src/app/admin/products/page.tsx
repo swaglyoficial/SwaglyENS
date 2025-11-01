@@ -358,6 +358,7 @@ export default function ProductsManagement() {
                               alt="Preview"
                               fill
                               className="object-cover"
+                              unoptimized
                             />
                           </div>
                         )}
@@ -483,6 +484,7 @@ export default function ProductsManagement() {
                                   alt={product.title}
                                   fill
                                   className="object-cover"
+                                  unoptimized
                                 />
                               ) : (
                                 <div className="flex h-full w-full items-center justify-center">

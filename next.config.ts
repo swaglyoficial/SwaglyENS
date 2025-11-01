@@ -180,6 +180,15 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        source: '/products/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600, must-revalidate',
+          },
+        ],
+      },
+      {
         source: '/:path*.{jpg,jpeg,png,gif,webp,avif,svg}',
         headers: [
           {
