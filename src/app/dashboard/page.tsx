@@ -498,6 +498,8 @@ export default function DashboardPage() {
           passportActivity={selectedActivity}
           userId={user.id}
           passportId={currentPassport.id}
+          walletAddress={address!}
+          eventId={currentPassport.event.id}
           open={showActivityDialog}
           onOpenChange={setShowActivityDialog}
           onSuccess={fetchUserData}

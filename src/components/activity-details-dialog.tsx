@@ -23,6 +23,7 @@ import {
   Circle
 } from 'lucide-react'
 import Image from 'next/image'
+import { ScanMerchDialog } from '@/components/scan-merch-dialog'
 
 interface Activity {
   id: string
@@ -64,6 +65,8 @@ interface ActivityDetailsDialogProps {
   passportActivity: PassportActivity | null
   userId: string
   passportId: string
+  walletAddress: string
+  eventId: string
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess: () => void
@@ -73,6 +76,8 @@ export function ActivityDetailsDialog({
   passportActivity,
   userId,
   passportId,
+  walletAddress,
+  eventId,
   open,
   onOpenChange,
   onSuccess,
@@ -86,6 +91,7 @@ export function ActivityDetailsDialog({
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [showForm, setShowForm] = useState(false)
+  const [showScanner, setShowScanner] = useState(false)
 
   if (!passportActivity) return null
 
@@ -632,7 +638,7 @@ export function ActivityDetailsDialog({
                 </div>
               )}
 
-              {/* Show Form Button */}
+              {/* Action Buttons */}
               {!isApproved && !isPending && !showForm && !isRejected && (
                 <Button
                   onClick={() => setShowForm(true)}
@@ -643,6 +649,17 @@ export function ActivityDetailsDialog({
                 </Button>
               )}
             </div>
+          )}
+
+          {/* Scan Merch Button - Only for activities that don't require proof (normal scan activities) */}
+          {!passportActivity.requiresProof && !isApproved && !isPending && (
+            <Button
+              onClick={() => setShowScanner(true)}
+              className="w-full bg-gradient-to-r from-[#5061EC] to-[#4051CC] text-sm font-bold text-white hover:opacity-90"
+            >
+              <Scan className="mr-2 h-4 w-4" />
+              Escanear Merch
+            </Button>
           )}
 
           {/* Completed Timestamp */}
@@ -667,6 +684,20 @@ export function ActivityDetailsDialog({
           )}
         </div>
       </DialogContent>
+
+      {/* Scan Merch Dialog */}
+      <ScanMerchDialog
+        userId={userId}
+        walletAddress={walletAddress}
+        eventId={eventId}
+        open={showScanner}
+        onOpenChange={setShowScanner}
+        onScanSuccess={() => {
+          setShowScanner(false)
+          onSuccess()
+        }}
+        refetchBalance={() => {}}
+      />
     </Dialog>
   )
 }
