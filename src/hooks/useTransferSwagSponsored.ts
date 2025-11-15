@@ -156,11 +156,14 @@ export function useTransferSwagSponsored() {
     }
 
     try {
+      // Reset estados
       setIsPending(true)
       setIsConfirming(false)
       setIsConfirmed(false)
       setError(null)
       setHash(undefined)
+
+      console.log('🚀 Iniciando transferencia patrocinada...')
 
       // 1. Crear deadline (24 horas desde ahora)
       const deadline = Math.floor(Date.now() / 1000) + 86400
@@ -168,6 +171,7 @@ export function useTransferSwagSponsored() {
       // 2. Convertir amount a wei
       const amountInWei = BigInt(amount) * BigInt(10 ** 18)
 
+      console.log('📝 Firmando permit...')
       // 3. Firmar el permit (off-chain, sin gas)
       const permitSignature = await signPermit(
         process.env.NEXT_PUBLIC_CREATOR_WALLET_ADDRESS!, // El spender será tu backend wallet
@@ -175,7 +179,14 @@ export function useTransferSwagSponsored() {
         deadline
       )
 
-      // 4. Enviar al backend para ejecutar permit + transferFrom
+      console.log('✅ Permit firmado, enviando al backend...')
+
+      // 4. El usuario ya firmó, ahora el backend procesa
+      setIsPending(false)
+      setIsConfirming(true)
+
+      // 5. Enviar al backend para ejecutar permit + transferFrom
+      // El backend esperará confirmación de ambas transacciones antes de responder
       const response = await fetch('/api/sponsored-transfer', {
         method: 'POST',
         headers: {
@@ -195,16 +206,13 @@ export function useTransferSwagSponsored() {
         throw new Error(data.error || 'Failed to execute sponsored transfer')
       }
 
-      // Actualizar estados
-      setIsPending(false)
-      setIsConfirming(true)
-      setHash(data.transactionHash)
+      // El backend ya esperó la confirmación de AMBAS transacciones
+      console.log('✅ Transacción confirmada en blockchain:', data.transactionHash)
+      console.log('📊 Detalles:', data.data)
 
-      // Simular confirmación (en producción, podrías hacer polling del estado)
-      setTimeout(() => {
-        setIsConfirming(false)
-        setIsConfirmed(true)
-      }, 5000)
+      setIsConfirming(false)
+      setIsConfirmed(true)
+      setHash(data.transactionHash)
 
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Unknown error')
@@ -216,8 +224,21 @@ export function useTransferSwagSponsored() {
     }
   }
 
+  /**
+   * Resetea todos los estados del hook
+   * Útil para iniciar una nueva transacción limpia
+   */
+  const reset = () => {
+    setIsPending(false)
+    setIsConfirming(false)
+    setIsConfirmed(false)
+    setHash(undefined)
+    setError(null)
+  }
+
   return {
     transferSwagSponsored,
+    reset,
     hash,
     isPending,
     isConfirming,

@@ -45,7 +45,7 @@ export default function ShopPage() {
   const router = useRouter()
   const { hasProfile, isChecking, address, isConnected } = useRequireProfile()
   const { balance, refetch } = useSwagBalance()
-  const { transferSwagSponsored, hash, isPending, isConfirming, isConfirmed, error: transferError } = useTransferSwagSponsored()
+  const { transferSwagSponsored, reset: resetTransfer, hash, isPending, isConfirming, isConfirmed, error: transferError } = useTransferSwagSponsored()
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
@@ -143,6 +143,8 @@ export default function ShopPage() {
   }, [transferError])
 
   const handleBuyClick = (product: Product) => {
+    // IMPORTANTE: Resetear todos los estados de la transacción anterior
+    resetTransfer()
     setSelectedProduct(product)
     setShowConfirmDialog(true)
     setPurchaseStatus({ type: null, message: '' })
@@ -155,6 +157,8 @@ export default function ShopPage() {
   }
 
   const handleCloseDialog = () => {
+    // IMPORTANTE: Resetear estados al cerrar el diálogo
+    resetTransfer()
     setShowConfirmDialog(false)
     setSelectedProduct(null)
     setPurchaseStatus({ type: null, message: '' })
@@ -596,9 +600,14 @@ export default function ShopPage() {
               <div className="rounded-full bg-blue-500/20 p-3">
                 <Loader2 className="h-12 w-12 animate-spin text-blue-400" />
               </div>
-              <p className="text-center text-sm text-blue-200">
-                Procesando transacción...
-              </p>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-blue-200">
+                  Procesando transacción en blockchain...
+                </p>
+                <p className="text-xs text-blue-300/70 mt-1">
+                  Esto puede tomar hasta 60 segundos
+                </p>
+              </div>
               {hash && (
                 <a
                   href={`https://scrollscan.com/tx/${hash}`}

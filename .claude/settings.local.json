@@ -16,7 +16,9 @@
       "Bash(node -e:*)",
       "Bash(npm install:*)",
       "Bash(npm run generate-icons:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(npm run build:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

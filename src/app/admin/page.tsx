@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { Calendar, Users, Zap, Building2, ShoppingBag, ShoppingCart, CheckCircle2 } from "lucide-react"
+import { Calendar, Users, Zap, Building2, ShoppingBag, ShoppingCart, CheckCircle2, BarChart3 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -98,6 +98,15 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto md:justify-end">
+            <Button
+              asChild
+              className="w-full bg-cyan-500 text-black shadow-[0_0_24px_rgba(0,240,255,0.35)] hover:bg-cyan-400 sm:w-auto"
+            >
+              <Link href="/admin/analytics">
+                <BarChart3 className="mr-2 h-4 w-4" />
+                Ver Analíticas
+              </Link>
+            </Button>
             <Button
               asChild
               variant="outline"
